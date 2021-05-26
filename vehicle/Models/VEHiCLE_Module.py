@@ -1,6 +1,6 @@
 import torch.nn.functional as F
 import torch.nn as nn
-import Models.VehicleGAN as vgan 
+from . import VehicleGAN as  vgan 
 import torch
 import pdb
 import os

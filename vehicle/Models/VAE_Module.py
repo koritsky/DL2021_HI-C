@@ -10,7 +10,7 @@ import math
 import torch
 from torch import nn
 from torch.nn import functional as F
-from Data.GM12878_DataModule import GM12878Module
+#from Data.GM12878_DataModule import GM12878Module
 from pytorch_lightning import Trainer
 import os
 import sys

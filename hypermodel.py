@@ -12,14 +12,17 @@ from torchvision import utils
 from neptune.new.types import File
 
 neptune_logger = NeptuneLogger(
-            #offline_mode=True,
+            offline_mode=True,
             project_name='koritsky/DL2021-Bio',
             api_key='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3YTY4ZWY2ZC1jNzQxLTQ1ZTctYTM2My03YTZhNDQ5MTRlNzYifQ==',
             tags=['test_hypermodel_logging']
         )
 
-#from akita import Akita
-#from vehicle import Vehicle
+import sys
+sys.path.append("vehicle/")
+from vehicle.Models.VEHiCLE_Module import GAN_Model 
+
+from hic_akita.akita.models import ModelAkita 
 
 class Dummy(nn.Module):
     def __init__(self):
@@ -31,10 +34,10 @@ class HyperModel(pl.LightningModule):
     def __init__(self, akita_checkpoint=None, vehicle_checkpoint=None):
         super().__init__()
 
-        self.akita = Dummy()
+        self.akita = ModelAkita() #Dummy()
         if akita_checkpoint is not None:
             self.akita.load_state_dict(torch.load(akita_checkpoint))
-        self.vehicle = Dummy()
+        self.vehicle = GAN_Model() #Dummy()
         if vehicle_checkpoint is not None:
             self.vehicle.load_state_dict(torch.load(vehicle_checkpoint))
 
@@ -102,7 +105,7 @@ class HyperModel(pl.LightningModule):
         vehicle_loss = F.mse_loss(vehicle_output.detach(), high_img_vehicle)
         final_loss = F.mse_loss(output, high_img_vehicle) #will be passed for backward
 
-        akita_metrics = self.calculate_metrics(akita_output, high_img_akita)
+        akita_metrics = self.calculate_metrics(akita_output.detach(), high_img_akita)
         vehicle_metrics = self.calculate_metrics(vehicle_output.detach(), high_img_vehicle)
         final_metrics = self.calculate_metrics(output.detach(), high_img_vehicle)
         
@@ -190,13 +193,14 @@ class HyperModel(pl.LightningModule):
 
 if __name__ == "__main__":
     
-    model = HyperModel().cuda()
+    model = HyperModel()
 
-    input_1, input_2 = torch.randn((4, 1, 8, 8)).cuda(), torch.randn((4, 1, 8, 8)).cuda()
+    #input_1, input_2 = torch.randn((4, 1, 8, 8)), torch.randn((4, 1, 8, 8))
 
-    output = model(input_1, input_2)
-    print(output)
-    print("output shape: ", output.shape)
+    #output = model(input_1, input_2)
+    
+    #print(output)
+    #print("output shape: ", output.shape)
 
     inps_1 = torch.randn((4, 1, 8, 8))
     inps_2 = torch.randn((4, 1, 8, 8))
