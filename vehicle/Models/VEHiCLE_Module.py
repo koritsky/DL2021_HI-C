@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 # from neptune.new.types import File
 
 class GAN_Model(pl.LightningModule):
-    def __init__(self, with_vae=False,batch_size=1):
+    def __init__(self, with_vae=True,batch_size=1):
         super(GAN_Model, self).__init__()
         self.mse_lambda     = 1
         self.tad_lambda     = 1
