@@ -33,20 +33,24 @@ class Dummy(nn.Module):
 
 class HyperModel(pl.LightningModule):
     def __init__(self,
-     akita_checkpoint=None,
-     # akita_checkpoint='hic_akita/checkpoints/ours_symm.pth',
+     #akita_checkpoint=None,
+     akita_checkpoint='hic_akita/checkpoints/akita.pth',
       vehicle_checkpoint=None,
-      # vehicle_checkpoint='vehicle/Weights/vehicle.ckpt'
+      #vehicle_checkpoint='vehicle/Weights/vehicle.ckpt'
       ):
         super().__init__()
 
-        self.akita = ModelAkita() #Dummy()
+        self.akita = ModelAkita(target_crop=6, preds_triu=False) #Dummy()
         if akita_checkpoint is not None:
             self.akita.load_state_dict(torch.load(akita_checkpoint))
         self.vehicle = GAN_Model() #Dummy()
+        print(self.vehicle.state_dict().keys())
         if vehicle_checkpoint is not None:
             # self.vehicle.load_state_dict(torch.load(vehicle_checkpoint))
-            self.vehicle.load_from_checkpoint(vehicle_checkpoint)
+            #checkpoint = torch.load(vehicle_checkpoint)
+            #print(checkpoint.keys())
+            #self.vehicle.load_state_dict(torch.load(vehicle_checkpoint)['state_dict'], )
+            pass
 
         self.head = nn.Sequential(
             nn.Conv2d(2, 1, 3, 1, padding=1)
@@ -61,7 +65,9 @@ class HyperModel(pl.LightningModule):
         return [opt]
 
     def akita_forward(self, sequence):
-        return self.akita(sequence)
+        #flatten_triu = self.akita(sequence)
+        #image = self.from_upper_triu(flatten_triu)
+        return  self.akita(sequence).unsqueeze(1)
     
     def vehicle_forward(self, low_img):
         return self.vehicle(low_img)
@@ -101,9 +107,11 @@ class HyperModel(pl.LightningModule):
 
         sequence, low_img, high_img_akita, high_img_vehicle = batch
 
-        akita_output = self.akita_forward(sequence)
-        vehicle_output = self.vehicle_forward(low_img)
+        akita_output = self.akita_forward(sequence) #[bs, 1, 188, 188]
+        vehicle_output = self.vehicle_forward(low_img) #[bs, 1, 188, 188]
         
+        print("akita output: ", akita_output.shape)
+        print("vehicle output: ", vehicle_output.shape)
         combined_input = torch.cat([akita_output, vehicle_output], dim=1) #stack along the channel dimension
         output = self.head(combined_input)
         
@@ -196,7 +204,14 @@ class HyperModel(pl.LightningModule):
         #colorized_x = colorized_x.permute((0, -1, 1, 2))[:, :-1, :, :]
         return colorized_x
 
-
+    def from_upper_triu(self, flatten_triu, img_size=188, num_diags=2):
+        
+        print("flatten shape: ", flatten_triu.shape)
+        z = torch.cat([torch.zeros((img_size, img_size)).unsqueeze(0) for _ in range(flatten_triu.shape[0])]) #[batch, img_size, img_size]
+        triu_tup = torch.triu_indices(img_size, img_size, num_diags) #[2, number of elements in triu]
+        z[:, triu_tup[0], triu_tup[1]] = flatten_triu
+        
+        return z + z.pertmute((0, 2, 1))
 
 if __name__ == "__main__":
     
@@ -209,15 +224,16 @@ if __name__ == "__main__":
     #print(output)
     #print("output shape: ", output.shape)
 
-    inps_1 = torch.randn((4, 1, 8, 8))
-    inps_2 = torch.randn((4, 1, 8, 8))
-    tgts = torch.randn((4, 1, 8, 8))
+    seq_len = int(1e6)
+    inps_1 = torch.randn((4, 4, seq_len))
+    inps_2 = torch.randn((4, 1, 200, 200))
+    tgts = torch.randn((4, 1, 188, 188))
     dataset = torch.utils.data.TensorDataset(inps_1, inps_2, tgts, tgts)
 
     loader = torch.utils.data.DataLoader(dataset, batch_size=2, num_workers=12, pin_memory=True)
     trainer = pl.Trainer(logger=neptune_logger,
                         max_epochs=3,
-                        gpus=1)
+                        gpus=None)
     trainer.fit(model, train_dataloader=loader, val_dataloaders=loader)
     
     
