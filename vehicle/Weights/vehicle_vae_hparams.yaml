@@ -1,0 +1,8 @@
+batch_size: 512
+condensed_latent: 3
+gamma: 1.0
+kld_weight: 1.0e-05
+kld_weight_inc: 0.0
+latent_dim: 200
+lr: 1.0e-05
+pre_latent: 4608
