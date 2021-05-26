@@ -35,8 +35,8 @@ class HyperModel(pl.LightningModule):
     def __init__(self,
      #akita_checkpoint=None,
      akita_checkpoint='hic_akita/checkpoints/akita.pth',
-      vehicle_checkpoint=None,
-      #vehicle_checkpoint='vehicle/Weights/vehicle.ckpt'
+      #vehicle_checkpoint=None,
+      vehicle_checkpoint='vehicle/Weights/vehicle.ckpt'
       ):
         super().__init__()
 
@@ -44,12 +44,9 @@ class HyperModel(pl.LightningModule):
         if akita_checkpoint is not None:
             self.akita.load_state_dict(torch.load(akita_checkpoint))
         self.vehicle = GAN_Model() #Dummy()
-        print(self.vehicle.state_dict().keys())
+        
         if vehicle_checkpoint is not None:
-            # self.vehicle.load_state_dict(torch.load(vehicle_checkpoint))
-            #checkpoint = torch.load(vehicle_checkpoint)
-            #print(checkpoint.keys())
-            #self.vehicle.load_state_dict(torch.load(vehicle_checkpoint)['state_dict'], )
+            self.vehicle.load_state_dict(torch.load(vehicle_checkpoint)['state_dict'])
             pass
 
         self.head = nn.Sequential(
