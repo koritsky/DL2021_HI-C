@@ -18,8 +18,9 @@ neptune_logger = NeptuneLogger(
             tags=['test_hypermodel_logging']
         )
 
-import sys
-sys.path.append("vehicle/")
+import os, sys
+sys.path.append(os.path.join(sys.path[0], "vehicle"))
+sys.path.append(os.path.join(sys.path[0], "hic_akita"))
 from vehicle.Models.VEHiCLE_Module import GAN_Model 
 
 from hic_akita.akita.models import ModelAkita 
@@ -31,7 +32,12 @@ class Dummy(nn.Module):
         return x
 
 class HyperModel(pl.LightningModule):
-    def __init__(self, akita_checkpoint=None, vehicle_checkpoint=None):
+    def __init__(self,
+     akita_checkpoint=None,
+     # akita_checkpoint='hic_akita/checkpoints/ours_symm.pth',
+      vehicle_checkpoint=None,
+      # vehicle_checkpoint='vehicle/Weights/vehicle.ckpt'
+      ):
         super().__init__()
 
         self.akita = ModelAkita() #Dummy()
@@ -39,7 +45,8 @@ class HyperModel(pl.LightningModule):
             self.akita.load_state_dict(torch.load(akita_checkpoint))
         self.vehicle = GAN_Model() #Dummy()
         if vehicle_checkpoint is not None:
-            self.vehicle.load_state_dict(torch.load(vehicle_checkpoint))
+            # self.vehicle.load_state_dict(torch.load(vehicle_checkpoint))
+            self.vehicle.load_from_checkpoint(vehicle_checkpoint)
 
         self.head = nn.Sequential(
             nn.Conv2d(2, 1, 3, 1, padding=1)

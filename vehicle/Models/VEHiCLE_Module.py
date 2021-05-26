@@ -29,8 +29,8 @@ class GAN_Model(pl.LightningModule):
         self.discriminator.init_params()
         self.bce            = nn.BCEWithLogitsLoss()
         self.mse  = nn.L1Loss()
-        self.vae_yaml        = "Trained_Models/vehicle_vae_hparams.yaml"
-        self.vae_weight      = "Trained_Models/vehicle_vae_sk.ckpt"
+        self.vae_yaml        = "Weights/vehicle_vae_hparams.yaml"
+        self.vae_weight      = "Weights/vehicle_vae_sk.ckpt"
         self.with_vae = with_vae
         if self.with_vae:
             self.vae             = vl.VaeLoss(self.vae_yaml, self.vae_weight)
