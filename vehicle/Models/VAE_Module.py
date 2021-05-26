@@ -189,6 +189,7 @@ class VAE_Model(pl.LightningModule):
            self.kld_weight = self.kld_weight + self.kld_weight_inc
         self.logger.experiment.log_metric('epoch', self.current_epoch)
 
+    @torch.no_grad()
     def validation_step(self, batch, batch_idx):
         data, full_target           = batch
         target = full_target[:,:,6:-6,6:-6]
