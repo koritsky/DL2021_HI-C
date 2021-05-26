@@ -12,7 +12,7 @@ from torchvision import utils
 from neptune.new.types import File
 
 neptune_logger = NeptuneLogger(
-            offline_mode=True,
+            offline_mode=False,
             project_name='koritsky/DL2021-Bio',
             api_key='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3YTY4ZWY2ZC1jNzQxLTQ1ZTctYTM2My03YTZhNDQ5MTRlNzYifQ==',
             tags=['test_hypermodel_logging']
@@ -24,6 +24,8 @@ sys.path.append(os.path.join(sys.path[0], "hic_akita"))
 from vehicle.Models.VEHiCLE_Module import GAN_Model 
 
 from hic_akita.akita.models import ModelAkita 
+
+from dataloader import get_dataloaders
 
 class Dummy(nn.Module):
     def __init__(self):
@@ -44,7 +46,7 @@ class HyperModel(pl.LightningModule):
         if akita_checkpoint is not None:
             self.akita.load_state_dict(torch.load(akita_checkpoint))
         self.vehicle = GAN_Model() #Dummy()
-        
+
         if vehicle_checkpoint is not None:
             self.vehicle.load_state_dict(torch.load(vehicle_checkpoint)['state_dict'])
             pass
@@ -103,6 +105,10 @@ class HyperModel(pl.LightningModule):
     def _step(self, batch):
 
         sequence, low_img, high_img_akita, high_img_vehicle = batch
+        print("high_img_vehicle shape: ", high_img_vehicle.shape)
+        low_img = low_img.unsqueeze(1) #[bs, 1, 200, 200]
+        high_img_akita = self.crop_img(high_img_akita.unsqueeze(1), cropping=6)
+        high_img_vehicle = self.crop_img(high_img_vehicle.unsqueeze(1), cropping=6)
 
         akita_output = self.akita_forward(sequence) #[bs, 1, 188, 188]
         vehicle_output = self.vehicle_forward(low_img) #[bs, 1, 188, 188]
@@ -210,6 +216,12 @@ class HyperModel(pl.LightningModule):
         
         return z + z.pertmute((0, 2, 1))
 
+    def crop_img(self, img, cropping=0):
+        _, _, s1, s2 = img.shape
+        return img[:, :, 
+            cropping:s1-cropping, 
+            cropping:s2-cropping]
+
 if __name__ == "__main__":
     
     model = HyperModel()
@@ -221,19 +233,30 @@ if __name__ == "__main__":
     #print(output)
     #print("output shape: ", output.shape)
 
-    seq_len = int(1e6)
-    inps_1 = torch.randn((4, 4, seq_len))
-    inps_2 = torch.randn((4, 1, 200, 200))
-    tgts = torch.randn((4, 1, 188, 188))
-    dataset = torch.utils.data.TensorDataset(inps_1, inps_2, tgts, tgts)
+    # seq_len = int(1e6)
+    # inps_1 = torch.randn((4, 4, seq_len))
+    # inps_2 = torch.randn((4, 1, 200, 200))
+    # tgts = torch.randn((4, 1, 188, 188))
+    # dataset = torch.utils.data.TensorDataset(inps_1, inps_2, tgts, tgts)
 
-    loader = torch.utils.data.DataLoader(dataset, batch_size=2, num_workers=12, pin_memory=True)
-    trainer = pl.Trainer(logger=neptune_logger,
-                        max_epochs=3,
-                        gpus=None)
-    trainer.fit(model, train_dataloader=loader, val_dataloaders=loader)
+    # loader = torch.utils.data.DataLoader(dataset, batch_size=2, num_workers=12, pin_memory=True)
+
+
+    # trainer = pl.Trainer(logger=neptune_logger,
+    #                     max_epochs=3,
+    #                     gpus=None)
+    # trainer.fit(model, train_dataloader=loader, val_dataloaders=loader)
     
     
     
     # for l in loader:
     #     print(l[0].shape, l[1].shape)
+
+
+    train_dataloader, val_dataloader, test_dataloader = get_dataloaders()
+
+    trainer = pl.Trainer(logger=neptune_logger,
+                        max_epochs=3,
+                        gpus=1)
+
+    trainer.fit(model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader)
