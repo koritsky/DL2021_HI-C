@@ -11,11 +11,13 @@ from matplotlib import cm
 from torchvision import utils
 from neptune.new.types import File
 
+import itertools
+
 neptune_logger = NeptuneLogger(
             #offline_mode=True,
             project_name='koritsky/DL2021-Bio',
             api_key='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3YTY4ZWY2ZC1jNzQxLTQ1ZTctYTM2My03YTZhNDQ5MTRlNzYifQ==',
-            tags=['First run with metrics']
+            tags=['Bigger head']
         )
 
 import os, sys
@@ -53,7 +55,12 @@ class HyperModel(pl.LightningModule):
             pass
 
         self.head = nn.Sequential(
-            nn.Conv2d(2, 1, 3, 1, padding=1)
+            nn.Conv2d(2, 16, 3, 1, padding=1),
+            nn.ReLU(inplace=True),
+            nn.BatchNorm2d(16),
+
+            nn.Conv2d(16, 1, 3, 1, padding=1),
+            nn.ReLU(inplace=True)
         )
 
         #for awesome pictures
@@ -146,10 +153,12 @@ class HyperModel(pl.LightningModule):
         akita_metrics = []
         final_metrics = []
         vehicle_metrics = []
-        for o in outputs[:6]:
+        for o in outputs:
             akita_metrics.append(o['akita_metrics'])
             final_metrics.append(o['final_metrics'])
             vehicle_metrics.append(o['vehicle_metrics'])
+
+        
         
         #print("akita metrics: ", akita_metrics)
 
@@ -159,10 +168,6 @@ class HyperModel(pl.LightningModule):
         high_imgs = torch.cat([o['high_img'] for o in outputs[:6]], dim=0).cpu()
         high_imgs_akita = torch.cat([o['high_img_akita'] for o in outputs[:6]], dim=0).cpu()
 
-        ###logging####
-        self.logger.experiment.log_metric('{}/loss'.format(phase), averaged_loss) # x=self.current_epoch, y=averaged_loss)
-        self.logger.experiment.log_metric('{}/akita_loss'.format(phase),averaged_akita_loss) # x=self.current_epoch,  y=averaged_akita_loss)
-        self.logger.experiment.log_metric('{}/vehicle_loss'.format(phase), averaged_vehicle_loss) # x=self.current_epoch, y=averaged_vehicle_loss)
 
         ###save images###
         self.log_pictures(akita_img=akita_output,
@@ -171,16 +176,47 @@ class HyperModel(pl.LightningModule):
                           high_img=high_imgs,
                           high_img_akita=high_imgs_akita,
                           
-                          akita_metrics=akita_metrics,
-                          vehicle_metrics=vehicle_metrics,
-                          final_metrics=final_metrics,
+                          akita_metrics=akita_metrics[:6],
+                          vehicle_metrics=vehicle_metrics[:6],
+                          final_metrics=final_metrics[:6],
 
                           phase=phase)
+        ###logging####
+        self.logger.experiment.log_metric('{}/loss'.format(phase), averaged_loss) # x=self.current_epoch, y=averaged_loss)
+        self.logger.experiment.log_metric('{}/akita_loss'.format(phase),averaged_akita_loss) # x=self.current_epoch,  y=averaged_akita_loss)
+        self.logger.experiment.log_metric('{}/vehicle_loss'.format(phase), averaged_vehicle_loss) # x=self.current_epoch, y=averaged_vehicle_loss)
+
+        self.log_metrics(akita_metrics=akita_metrics,
+                         final_metrics=final_metrics,
+                         vehicle_metrics=vehicle_metrics,
+                         
+                         phase=phase)
+
+    def log_metrics(self, akita_metrics, final_metrics, vehicle_metrics, phase):
+        akita_metrics = list(itertools.chain(*akita_metrics))
+        final_metrics = list(itertools.chain(*final_metrics))
+        vehicle_metrics = list(itertools.chain(*vehicle_metrics))
+        self.logger.experiment.log_metric('{}/final_mse'.format(phase), np.mean(final_metrics[::4]))
+        self.logger.experiment.log_metric('{}/final_spearman'.format(phase), np.mean(final_metrics[1::4])) 
+        self.logger.experiment.log_metric('{}/final_pearson'.format(phase), np.mean(final_metrics[2::4])) 
+        self.logger.experiment.log_metric('{}/final_scc'.format(phase), np.mean(final_metrics[3::4]))
+
+        self.logger.experiment.log_metric('{}/akita_mse'.format(phase), np.mean(akita_metrics[::4]))
+        self.logger.experiment.log_metric('{}/akita_spearman'.format(phase), np.mean(akita_metrics[1::4])) 
+        self.logger.experiment.log_metric('{}/akita_pearson'.format(phase), np.mean(akita_metrics[2::4])) 
+        self.logger.experiment.log_metric('{}/akita_scc'.format(phase), np.mean(akita_metrics[3::4])) 
+
+        self.logger.experiment.log_metric('{}/vehicle_mse'.format(phase), np.mean(vehicle_metrics[::4]))
+        self.logger.experiment.log_metric('{}/vehicle_spearman'.format(phase), np.mean(vehicle_metrics[1::4])) 
+        self.logger.experiment.log_metric('{}/vehicle_pearson'.format(phase), np.mean(vehicle_metrics[2::4])) 
+        self.logger.experiment.log_metric('{}/vehicle_scc'.format(phase), np.mean(vehicle_metrics[3::4])) 
+
     
     def _construct_grid(self, img, metrics=None):
 
         bs = img.shape[0] #number of images
-        fig, ax = plt.subplots(1, bs, sharey=True)
+        fig, ax = plt.subplots(1, bs, sharey=True, figsize=(15*bs, 15))
+        fig.tight_layout(pad=3.0)
 
         for i in range(bs):
             ax[i].imshow(img[i])
@@ -192,7 +228,7 @@ class HyperModel(pl.LightningModule):
             if metrics is not None:
 
                 metrics_str = "MSE: %.2f \nSpearman: %.2f \nPearson: %.2f \nSCC: %.2f" % tuple(metrics[i])
-                ax[i].text(0, -0.14, metrics_str, transform=ax[i].transAxes) #bbox={'facecolor': 'white', 'pad': 10})
+                ax[i].text(0, -0.25, metrics_str, transform=ax[i].transAxes, fontsize=55) #bbox={'facecolor': 'white', 'pad': 10})
         
         return fig
 
@@ -255,3 +291,4 @@ if __name__ == "__main__":
                         )
 
     trainer.fit(model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader)
+
