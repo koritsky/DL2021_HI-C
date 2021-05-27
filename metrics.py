@@ -28,7 +28,11 @@ def get_scc(mat1, mat2):
         else:
         # Compute raw pearson coeff for this diag
             corr = np.corrcoef(d1, d2)[0,1]
-            if np.isnan(corr): corr = 0.0
+            if np.isnan(corr):
+                if np.std(d1) < 1e-5 and np.std(d2) < 1e-5:
+                    corr = 1.0
+                else: 
+                    corr = 0.0
             corr_diag[d] = corr
             
         # Compute weight for this diag
@@ -70,9 +74,9 @@ def get_scores(preds, targets):
     return scores
 
 
-# if __name__ == '__main__':
+#if __name__ == '__main__':
 
-#     mat1 = torch.rand((4, 1, 16, 16))
-#     mat2 = torch.rand((4, 1, 16, 16))
+     #mat1 = torch.rand((4, 1, 16, 16))
+     #mat2 = torch.ones((4, 1, 16, 16))
 
-#     print(get_scores(mat1, mat2))
+     #print(get_scores(mat1, mat2))
