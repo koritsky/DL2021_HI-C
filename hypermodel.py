@@ -26,6 +26,7 @@ sys.path.append(os.path.join(sys.path[0], "hic_akita"))
 from vehicle.Models.VEHiCLE_Module import GAN_Model 
 
 from hic_akita.akita.models import ModelAkita 
+from hic_akita.akita.layers import Symmetrize2d
 
 from dataloader import get_dataloaders
 from metrics import get_scores
@@ -58,9 +59,11 @@ class HyperModel(pl.LightningModule):
             nn.Conv2d(2, 16, 3, 1, padding=1),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(16),
+            Symmetrize2d(),
 
             nn.Conv2d(16, 1, 3, 1, padding=1),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
+            Symmetrize2d()
         )
 
         #for awesome pictures
