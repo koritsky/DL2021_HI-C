@@ -12,10 +12,10 @@ from torchvision import utils
 from neptune.new.types import File
 
 neptune_logger = NeptuneLogger(
-            offline_mode=False,
+            #offline_mode=True,
             project_name='koritsky/DL2021-Bio',
             api_key='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3YTY4ZWY2ZC1jNzQxLTQ1ZTctYTM2My03YTZhNDQ5MTRlNzYifQ==',
-            tags=['First run']
+            tags=['First run with metrics']
         )
 
 import os, sys
@@ -26,6 +26,7 @@ from vehicle.Models.VEHiCLE_Module import GAN_Model
 from hic_akita.akita.models import ModelAkita 
 
 from dataloader import get_dataloaders
+from metrics import get_scores
 
 class Dummy(nn.Module):
     def __init__(self):
@@ -118,9 +119,9 @@ class HyperModel(pl.LightningModule):
         vehicle_loss = F.mse_loss(vehicle_output.detach(), high_img_vehicle)
         final_loss = F.mse_loss(output, high_img_vehicle) #will be passed for backward
 
-        akita_metrics = self.calculate_metrics(akita_output.detach(), high_img_akita)
-        vehicle_metrics = self.calculate_metrics(vehicle_output.detach(), high_img_vehicle)
-        final_metrics = self.calculate_metrics(output.detach(), high_img_vehicle)
+        akita_metrics = self.calculate_metrics(akita_output.detach(), high_img_akita.detach())
+        vehicle_metrics = self.calculate_metrics(vehicle_output.detach(), high_img_vehicle.detach())
+        final_metrics = self.calculate_metrics(output.detach(), high_img_vehicle.detach())
         
         return {"loss":final_loss,
                 "akita_loss":akita_loss.detach(),
@@ -145,11 +146,12 @@ class HyperModel(pl.LightningModule):
         akita_metrics = []
         final_metrics = []
         vehicle_metrics = []
-        for o in outputs[:3]:
-            akita_metrics.extend(o['akita_metrics'])
-            final_metrics.extend(o['final_metrics'])
-            vehicle_metrics.extend(o['vehicle_metrics'])
+        for o in outputs[:6]:
+            akita_metrics.append(o['akita_metrics'])
+            final_metrics.append(o['final_metrics'])
+            vehicle_metrics.append(o['vehicle_metrics'])
         
+        #print("akita metrics: ", akita_metrics)
 
         akita_output = torch.cat([o['akita_output'] for o in outputs[:6]], dim=0).cpu()
         final_output = torch.cat([o['final_output'] for o in outputs[:6]], dim=0).cpu()
@@ -189,12 +191,12 @@ class HyperModel(pl.LightningModule):
 
             if metrics is not None:
 
-                metrics_str = "MSE: %.2f \nSpearman: %.2f \nPearson: \nSCC: %.2f" % tuple(metrics[i])
-                ax[i].text(0, -0.7, metrics_str, transform=ax[i].transAxes) #bbox={'facecolor': 'white', 'pad': 10})
+                metrics_str = "MSE: %.2f \nSpearman: %.2f \nPearson: %.2f \nSCC: %.2f" % tuple(metrics[i])
+                ax[i].text(0, -0.14, metrics_str, transform=ax[i].transAxes) #bbox={'facecolor': 'white', 'pad': 10})
         
         return fig
 
-    def log_pictures(self, akita_img, vehicle_img, final_img, high_img, high_img_akita, akita_metrics, vehicle_metrics, final_metrics, phase):
+    def log_pictures(self, akita_img, vehicle_img, final_img, high_img, high_img_akita, phase, akita_metrics=None, vehicle_metrics=None, final_metrics=None):
         
         grid = self._construct_grid(self.get_colors(final_img), final_metrics) #utils.make_grid(self.get_colors(final_img), nrow=2)
         self.logger.experiment.log_image('{}/final_img'.format(phase), grid) #self.current_epoch, grid)
@@ -216,7 +218,8 @@ class HyperModel(pl.LightningModule):
         plt.clf()
     
     def calculate_metrics(self, y_pred, y_true):
-        return [[0, 0, 0] for _ in range(y_pred.shape[0])]
+        scores = get_scores(y_pred, y_true)
+        return [scores['mse'], scores['spearman'], scores['pearson'], scores['scc']]
 
     def get_colors(self, x):
         colorized_x = torch.Tensor(self.mapper.to_rgba(x))
@@ -246,7 +249,7 @@ if __name__ == "__main__":
     train_dataloader, val_dataloader, test_dataloader = get_dataloaders(batch_size=1)
 
     trainer = pl.Trainer(logger=neptune_logger,
-                        max_epochs=30,
+                        max_epochs=10,
                         gpus=1,
                         accumulate_grad_batches=32
                         )
