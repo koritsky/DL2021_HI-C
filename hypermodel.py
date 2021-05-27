@@ -17,7 +17,7 @@ neptune_logger = NeptuneLogger(
             #offline_mode=True,
             project_name='koritsky/DL2021-Bio',
             api_key='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3YTY4ZWY2ZC1jNzQxLTQ1ZTctYTM2My03YTZhNDQ5MTRlNzYifQ==',
-            tags=['Bigger head']
+            tags=['Bigger head + Normalized akita output']
         )
 
 import os, sys
@@ -67,7 +67,7 @@ class HyperModel(pl.LightningModule):
         )
 
         #for awesome pictures
-        self.mapper = cm.ScalarMappable(cmap=cm.RdBu_r)
+        self.mapper = cm.get_cmap('RdBu_r') #cm.ScalarMappable(cmap=cm.RdBu_r)
 
     def configure_optimizers(self):
         all_params = list(self.akita.parameters()) + list(self.vehicle.parameters()) + list(self.head.parameters())
@@ -121,7 +121,7 @@ class HyperModel(pl.LightningModule):
         akita_output = self.akita_forward(sequence) #[bs, 1, 188, 188]
         vehicle_output = self.vehicle_forward(low_img.unsqueeze_(1)) #[bs, 1, 188, 188]
         
-        combined_input = torch.cat([akita_output, vehicle_output], dim=1) #stack along the channel dimension
+        combined_input = torch.cat([(akita_output + 2) / 4, vehicle_output], dim=1) #stack along the channel dimension
         output = self.head(combined_input)
         
         #akita_normalized_output = (akita_output.detach() + 2) / 4
@@ -261,7 +261,7 @@ class HyperModel(pl.LightningModule):
         return [scores['mse'], scores['spearman'], scores['pearson'], scores['scc']]
 
     def get_colors(self, x):
-        colorized_x = torch.Tensor(self.mapper.to_rgba(x))
+        colorized_x = torch.from_numpy(self.mapper(x.numpy()))
         colorized_x = colorized_x.squeeze(1)
         #colorized_x = colorized_x.permute((0, -1, 1, 2))[:, :-1, :, :]
         return colorized_x
