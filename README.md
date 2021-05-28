@@ -12,12 +12,20 @@ To launch training you can just run hypermodel.py
 python3 hypermodel.py
 ```
 
-## Model Evaluation
+## Model Evaluation on the test set
 
+Before evaluation download weights from https://drive.google.com/file/d/1oEoIGMc5Hl1ragEuR0gYyTuRf1hSbIRs/view?usp=sharing
 To start evaluating run ...
 ```
-python3
+python3 eval.py --model conv --checkpoint PATH_TO_WEIGHTS --cuda 1 --plot 2
 ```
+model logs can be checked at https://app.neptune.ai/koritsky/DL2021-Bio
+
+## Hybrid model
+
+The key idea of our model is incorporation of information about a DNA sequence to a low resolution image to obtain an image with higher resolution
+
+![hybrid img](./imgs/Model_combining.png)
 
 ## VeHiCLE model
 
@@ -57,8 +65,3 @@ Sequence-to-image model that accurately predicts genome folding from DNA sequenc
 }
 ```
 
-## Hybrid model
-
-The key idea of our model is incorporation of information about a DNA sequence to a low resolution image to obtain an image with higher resolution
-
-![hybrid img](./imgs/Model_combining.png)

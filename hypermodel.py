@@ -17,7 +17,7 @@ neptune_logger = NeptuneLogger(
             #offline_mode=True,
             project_name='koritsky/DL2021-Bio',
             api_key='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3YTY4ZWY2ZC1jNzQxLTQ1ZTctYTM2My03YTZhNDQ5MTRlNzYifQ==',
-            tags=['Bigger head + Normalized akita output']
+            tags=['Another training run']
         )
 
 import os, sys
@@ -58,7 +58,7 @@ class HyperModel(pl.LightningModule):
         self.head = nn.Sequential(
             nn.Conv2d(2, 16, 3, 1, padding=1),
             nn.ReLU(inplace=True),
-            nn.BatchNorm2d(16),
+           # nn.BatchNorm2d(16),
             Symmetrize2d(),
 
             nn.Conv2d(16, 1, 3, 1, padding=1),
@@ -70,22 +70,23 @@ class HyperModel(pl.LightningModule):
         self.mapper = cm.get_cmap('RdBu_r') #cm.ScalarMappable(cmap=cm.RdBu_r)
 
     def configure_optimizers(self):
-        all_params = list(self.akita.parameters()) + list(self.vehicle.parameters()) + list(self.head.parameters())
+        all_params = list(self.akita.parameters()) + list(self.head.parameters() + list(self.vehicle.parameters()))
         opt = torch.optim.AdamW(all_params, lr=1e-5, weight_decay=1e-5)
         return [opt]
 
     def akita_forward(self, sequence):
         return  self.akita(sequence).unsqueeze(1)
     
+    #@torch.no_grad()
     def vehicle_forward(self, low_img):
         return self.vehicle(low_img)
 
     def forward(self, sequence, low_img):
 
         akita_output = self.akita_forward(sequence)
-        vehicle_output = self.vehicle_forward(low_img)
+        vehicle_output = self.vehicle_forward(low_img.unsqueeze(1))
         
-        combined_input = torch.cat([akita_output, vehicle_output], dim=1) #stack along the channel dimension
+        combined_input = torch.cat([(akita_output + 2 / 4), vehicle_output], dim=1) #stack along the channel dimension
         output = self.head(combined_input)
         
         return output
@@ -258,7 +259,7 @@ class HyperModel(pl.LightningModule):
     
     def calculate_metrics(self, y_pred, y_true):
         scores = get_scores(y_pred, y_true)
-        return [scores['mse'], scores['spearman'], scores['pearson'], scores['scc']]
+        return [scores['mse'], scores['spearman'], scores['pearson'], scores['scc'], ]
 
     def get_colors(self, x):
         colorized_x = torch.from_numpy(self.mapper(x.numpy()))
@@ -281,6 +282,36 @@ class HyperModel(pl.LightningModule):
             cropping:s1-cropping, 
             cropping:s2-cropping]
 
+    @torch.no_grad()
+    def test_step(self, batch, batch_idx):
+        
+        _, _, _, high_img_vehicle = batch
+        high_img_vehicle = self.crop_img(high_img_vehicle.unsqueeze(1), cropping=6)
+
+        output = self._step(batch)['final_output']
+
+        #manually change diagonal, because it should be 1 always
+        indices = [i for i in range(output.shape[3])] #[0...188]
+        output[:, :, indices, indices] = high_img_vehicle[:, :, indices, indices]
+
+        output[:, :, indices[1:], indices[:1]] = high_img_vehicle[:, :, indices[1:], indices[:1]]
+        output[:, :, indices[:1], indices[1:]] = high_img_vehicle[:, :, indices[:1], indices[1:]]
+
+        #metrics
+        scores = self.calculate_metrics(output, high_img_vehicle)
+
+        return scores
+
+    def test_epoch_end(self, outputs):
+        
+        print("mean mse: ", np.mean([score[0] for score in outputs]))
+        print("mean spearman: ", np.mean([score[1] for score in outputs]))
+        print("mean pearson: ", np.mean([score[2] for score in outputs]))
+        print("mean scc: ", np.mean([score[3] for score in outputs]))
+        #print("mean mae: ", np.mean([score[4] for score in outputs]))
+
+        return outputs
+
 if __name__ == "__main__":
     
     model = HyperModel()
@@ -288,10 +319,11 @@ if __name__ == "__main__":
     train_dataloader, val_dataloader, test_dataloader = get_dataloaders(batch_size=1)
 
     trainer = pl.Trainer(logger=neptune_logger,
-                        max_epochs=10,
+                        max_epochs=30,
                         gpus=1,
                         accumulate_grad_batches=32
                         )
 
     trainer.fit(model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader)
 
+    torch.save(model.state_dict(), "hypermodel_frozen_vehicle.pth")
