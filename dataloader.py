@@ -115,4 +115,5 @@ if __name__ == "__main__":
     
     for b in tqdm(dataloader_val):
         seq, t_low, t_high, t_high_2 = b
+        print(t_low.shape)
         break

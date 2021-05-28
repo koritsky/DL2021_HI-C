@@ -1,4 +1,25 @@
-# VeHiCLE model
+## Environment setup
+
+```
+python3 -m pip install -r requirements.txt
+```
+
+## Model Training
+
+To launch training you can just run hypermodel.py
+
+```
+python3 hypermodel.py
+```
+
+## Model Evaluation
+
+To start evaluating run ...
+```
+python3
+```
+
+## VeHiCLE model
 
 VEHiCLE, a DL algorithm for resolution enhancement of Hi-C contact data.
 
@@ -17,7 +38,7 @@ VEHiCLE, a DL algorithm for resolution enhancement of Hi-C contact data.
 }
 ```
 
-# Akita model
+## Akita model
 
 Sequence-to-image model that accurately predicts genome folding from DNA sequence.
 
@@ -36,7 +57,7 @@ Sequence-to-image model that accurately predicts genome folding from DNA sequenc
 }
 ```
 
-# Hybrid model
+## Hybrid model
 
 The key idea of our model is incorporation of information about a DNA sequence to a low resolution image to obtain an image with higher resolution
 
