@@ -13,8 +13,12 @@ python3 hypermodel.py
 ```
 
 ## Model Evaluation on the test set
-Download datasets from https://drive.google.com/drive/folders/1wy0lwgR_zzb2GDVkwRELqITkSY1jt6v8 and put the into dataset/ directory
+Download datasets from https://drive.google.com/drive/folders/1wy0lwgR_zzb2GDVkwRELqITkSY1jt6v8 and put it into the dataset/ directory
 
+
+<!---
+All this should be 
+commented out
 <br>
 
 Before evaluation download weights from if you want akita with convolutional head https://drive.google.com/file/d/1oEoIGMc5Hl1ragEuR0gYyTuRf1hSbIRs/view?usp=sharing
@@ -24,11 +28,14 @@ Before evaluation download weights from if you want akita with convolutional hea
 and if you want akita with graph head download https://drive.google.com/file/d/1oEoIGMc5Hl1ragEuR0gYyTuRf1hSbIRs/view?usp=sharing
 
 <br>
+-->
+
 
 To start evaluating run ...
 ``` bash
 python3 eval.py --model conv --checkpoint PATH_TO_WEIGHTS --cuda 1 --plot 2
 ```
+PATH_TO_WEIGHTS is hypermodel.pth
 
 model logs can be checked at https://app.neptune.ai/koritsky/DL2021-Bio
 
