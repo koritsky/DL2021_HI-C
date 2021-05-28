@@ -288,7 +288,7 @@ if __name__ == "__main__":
     train_dataloader, val_dataloader, test_dataloader = get_dataloaders(batch_size=1)
 
     trainer = pl.Trainer(logger=neptune_logger,
-                        max_epochs=1,
+                        max_epochs=30,
                         gpus=1,
                         accumulate_grad_batches=32
                         )
