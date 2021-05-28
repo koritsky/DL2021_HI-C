@@ -13,6 +13,9 @@ python3 hypermodel.py
 ```
 
 ## Model Evaluation on the test set
+Download datasets from https://drive.google.com/drive/folders/1wy0lwgR_zzb2GDVkwRELqITkSY1jt6v8 and put the into dataset/ directory
+
+<br>
 
 Before evaluation download weights from if you want akita with convolutional head https://drive.google.com/file/d/1oEoIGMc5Hl1ragEuR0gYyTuRf1hSbIRs/view?usp=sharing
 
