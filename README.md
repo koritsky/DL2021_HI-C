@@ -1,6 +1,6 @@
 ## Environment setup
 
-```
+``` bash
 python3 -m pip install -r requirements.txt
 ```
 
@@ -8,17 +8,25 @@ python3 -m pip install -r requirements.txt
 
 To launch training you can just run hypermodel.py
 
-```
+``` bash
 python3 hypermodel.py
 ```
 
 ## Model Evaluation on the test set
 
-Before evaluation download weights from https://drive.google.com/file/d/1oEoIGMc5Hl1ragEuR0gYyTuRf1hSbIRs/view?usp=sharing
+Before evaluation download weights from if you want akita with convolutional head https://drive.google.com/file/d/1oEoIGMc5Hl1ragEuR0gYyTuRf1hSbIRs/view?usp=sharing
+
+<br>
+
+and if you want akita with graph head download https://drive.google.com/file/d/1oEoIGMc5Hl1ragEuR0gYyTuRf1hSbIRs/view?usp=sharing
+
+<br>
+
 To start evaluating run ...
-```
+``` bash
 python3 eval.py --model conv --checkpoint PATH_TO_WEIGHTS --cuda 1 --plot 2
 ```
+
 model logs can be checked at https://app.neptune.ai/koritsky/DL2021-Bio
 
 ## Hybrid model
