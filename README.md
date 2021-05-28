@@ -12,6 +12,8 @@ To launch training you can just run hypermodel.py
 python3 hypermodel.py
 ```
 
+model logs can be checked at https://app.neptune.ai/koritsky/DL2021-Bio
+
 ## Model Evaluation on the test set
 Download datasets from https://drive.google.com/drive/folders/1wy0lwgR_zzb2GDVkwRELqITkSY1jt6v8 and put it into the dataset/ directory
 
@@ -37,7 +39,6 @@ python3 eval.py --model conv --checkpoint PATH_TO_WEIGHTS --cuda 1 --plot 2
 ```
 PATH_TO_WEIGHTS is hypermodel.pth
 
-model logs can be checked at https://app.neptune.ai/koritsky/DL2021-Bio
 
 ## Hybrid model
 
