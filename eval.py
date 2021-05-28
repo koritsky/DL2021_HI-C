@@ -37,17 +37,22 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', choices=['conv', 'graph'])
     parser.add_argument('--plot', help='number of model outputs to plot, if 0 does not plot at all', type=int, default=0)
+    parser.add_argument("--checkpoint", help="path to weights checkpoint file", default=None)
     parser.add_argument('--cuda', type=int, choices=[1, 0])
     args = parser.parse_args()
     
     if args.model == 'conv':
         from hypermodel import HyperModel
         model = HyperModel()
-        model.load_state_dict(torch.load("hypermodel.pth"))
+        if args.checkpoint is None:
+            args.checkpoint = "hypermodel.pth"
+        model.load_state_dict(torch.load(args.checkpoint))
     elif args.model == 'graph':
         from hypermodel_graph import HyperModel
         model = HyperModel()
-        model.load_state_dict(torch.load("hypermodel-graph.pth"))
+        if args.checkpoint is None:
+            args.checkpoint = "hypermodel-graph.pth"
+        model.load_state_dict(torch.load(args.checkpoint))
     
 
     _, _, test_set = get_dataloaders()
@@ -61,19 +66,20 @@ if __name__ == "__main__":
     
     if args.plot:
         outputs = []
-        for i, b in enumerate(test_set):
-            seq, low_img = b[0], b[1]
-            if args.cuda:
-                seq = seq.cuda()
-                low_img = low_img.cuda()
-            output = model.forward(seq, low_img).detach().cpu()
+        with torch.no_grad():
+            for i, b in enumerate(test_set):
+                seq, low_img = b[0], b[1]
+                if args.cuda:
+                    seq = seq.cuda()
+                    low_img = low_img.cuda()
+                output = model.forward(seq, low_img).detach().cpu()
 
-            outputs.append(output)
+                outputs.append(output)
 
-            if i >= args.plot:
-                break
-        
-        outputs = torch.cat(outputs, dim=0)
-        colorized_output = model.get_colors(outputs)
-        figure = model._construct_grid(colorized_output)
-        figure.savefig('model_output.png')
+                if i >= args.plot:
+                    break
+            
+            outputs = torch.cat(outputs, dim=0)
+            colorized_output = model.get_colors(outputs)
+            figure = model._construct_grid(colorized_output)
+            figure.savefig('model_output.png')
