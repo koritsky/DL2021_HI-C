@@ -70,7 +70,7 @@ class HyperModel(pl.LightningModule):
         self.mapper = cm.get_cmap('RdBu_r') #cm.ScalarMappable(cmap=cm.RdBu_r)
 
     def configure_optimizers(self):
-        all_params = list(self.akita.parameters()) + list(self.head.parameters() + list(self.vehicle.parameters()))
+        all_params = list(self.akita.parameters()) + list(self.head.parameters()) + list(self.vehicle.parameters())
         opt = torch.optim.AdamW(all_params, lr=1e-5, weight_decay=1e-5)
         return [opt]
 
