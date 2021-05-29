@@ -10,9 +10,14 @@ To launch training you can just run hypermodel.py
 
 ``` bash
 python3 hypermodel.py
+python3 hypermodel_graph.py
 ```
 
-model logs can be checked at https://app.neptune.ai/koritsky/DL2021-Bio
+model logs of all our training attempts can be checked at https://app.neptune.ai/koritsky/DL2021-Bio
+
+logs of hypermodel.py are at  https://app.neptune.ai/koritsky/DL2021-Bio/e/DLBIO-165
+
+logs of hypermodel_graph.py are at https://app.neptune.ai/koritsky/DL2021-Bio/e/DLBIO-178
 
 ## Model Evaluation on the test set
 Download datasets from https://drive.google.com/drive/folders/1wy0lwgR_zzb2GDVkwRELqITkSY1jt6v8 and put it into the dataset/ directory
@@ -33,11 +38,12 @@ and if you want akita with graph head download https://drive.google.com/file/d/1
 -->
 
 
-To start evaluating run ...
+To start model evaluation ...
 ``` bash
 python3 eval.py --model model_type --checkpoint PATH_TO_WEIGHTS --cuda 1 --plot 2
 ```
 PATH_TO_WEIGHTS is hypermodel.pth or hypermodel-graph.pth
+
 model_type is conv or graph
 
 ## Hybrid model
