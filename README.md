@@ -35,10 +35,10 @@ and if you want akita with graph head download https://drive.google.com/file/d/1
 
 To start evaluating run ...
 ``` bash
-python3 eval.py --model conv --checkpoint PATH_TO_WEIGHTS --cuda 1 --plot 2
+python3 eval.py --model model_type --checkpoint PATH_TO_WEIGHTS --cuda 1 --plot 2
 ```
-PATH_TO_WEIGHTS is hypermodel.pth
-
+PATH_TO_WEIGHTS is hypermodel.pth or hypermodel-graph.pth
+model_type is conv or graph
 
 ## Hybrid model
 
