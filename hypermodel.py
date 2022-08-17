@@ -14,11 +14,10 @@ from neptune.new.types import File
 import itertools
 
 neptune_logger = NeptuneLogger(
-            #offline_mode=True,
-            project_name='koritsky/DL2021-Bio',
-            api_key='eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI3YTY4ZWY2ZC1jNzQxLTQ1ZTctYTM2My03YTZhNDQ5MTRlNzYifQ==',
-            tags=['Another training run']
-        )
+    project="zybinmikhail/DL2021HI-C",
+    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiIyZjEyYjc2YS1kMzQyLTQyMzUtYTI1My0yYjFhODcwZWUxNGIifQ==",
+    tags=['Another training run'],
+)
 
 import os, sys
 sys.path.append(os.path.join(sys.path[0], "vehicle"))

@@ -138,16 +138,16 @@ testpath==0.4.4
 threadpoolctl==2.1.0
 tifffile==2020.9.3
 tokenizers==0.5.0
-torch==1.8.1
-torch-cluster==1.5.9
-torch-geometric==1.7.0
-torch-scatter==2.0.6
-torch-sparse==0.6.9
-torch-spline-conv==1.2.1
-torchaudio==0.8.1
-torchmetrics==0.2.0
-torchtext==0.9.1
-torchvision==0.9.1
+torch
+torch-cluster @ https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_cluster-1.6.0-cp37-cp37m-linux_x86_64.whl
+torch-geometric
+torch-scatter @ https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_scatter-2.0.9-cp37-cp37m-linux_x86_64.whl
+torch-sparse @ https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_sparse-0.6.14-cp37-cp37m-linux_x86_64.whl
+torch-spline-conv @ https://data.pyg.org/whl/torch-1.12.0%2Bcu113/torch_spline_conv-1.2.1-cp37-cp37m-linux_x86_64.whl
+torchaudio
+torchmetrics
+torchtext
+torchvision
 tornado==6.1
 tqdm==4.60.0
 traitlets==4.3.3

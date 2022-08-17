@@ -5,6 +5,7 @@ import pdb
 import yaml
 import sys
 sys.path.append(".")
+from yaml.loader import SafeLoader
 from Models.VAE_Module import VAE_Model
 from torch.nn import functional as F
 
@@ -12,7 +13,7 @@ class VaeLoss(torch.nn.Module):
     def __init__(self, yaml_path, weight_path):
         super(VaeLoss, self).__init__()
         op      = open(yaml_path)
-        hparams = yaml.load(op)
+        hparams = yaml.load(op, Loader=SafeLoader)
         model   = VAE_Model(
                 condensed_latent=hparams['condensed_latent'],
                 gamma=hparams['gamma'],
@@ -28,4 +29,3 @@ class VaeLoss(torch.nn.Module):
         latent_target, mu_target, var_target = self.pretrained_model.get_z(target)
         loss          = F.mse_loss(mu_target, mu_out)
         return loss
-
