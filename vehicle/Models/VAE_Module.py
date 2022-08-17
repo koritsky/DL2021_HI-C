@@ -3,17 +3,18 @@
 #the stencil code comes from
 #https://github.com/AntixK/PyTorch-VAE/blob/master/models/betatc_vae.py
 
-import torch
-import pdb
-import pytorch_lightning as pl
 import math
+import os
+import pdb
+import sys
+
+import pytorch_lightning as pl
 import torch
-from torch import nn
-from torch.nn import functional as F
 #from Data.GM12878_DataModule import GM12878Module
 from pytorch_lightning import Trainer
-import os
-import sys
+from torch import nn
+from torch.nn import functional as F
+
 
 class VAE_Model(pl.LightningModule):
 

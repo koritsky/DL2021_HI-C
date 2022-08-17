@@ -1,7 +1,9 @@
 ## Environment setup
 
+This project currently uses python 3.7.
+
 ``` bash
-python3 -m pip install -r requirements.txt
+python3 -m pip install -r requirements_new.txt
 ```
 
 ## Model Training

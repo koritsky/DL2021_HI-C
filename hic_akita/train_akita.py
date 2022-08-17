@@ -1,17 +1,17 @@
+import argparse
 import os
 import sys
+
 import numpy as np
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pytorch_lightning as pl
 import torchvision
-import argparse
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from scipy.stats import pearsonr, spearmanr
-
 from akita.models import ModelAkita, ModelWGraph
-from akita.utils import get_dataloaders, convert_gr_to_rb, from_upper_triu
+from akita.utils import convert_gr_to_rb, from_upper_triu, get_dataloaders
+from scipy.stats import pearsonr, spearmanr
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 
 class PLModel(pl.LightningModule):

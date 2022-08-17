@@ -1,14 +1,15 @@
-import matplotlib.pyplot as plt
+import glob
 import os
-import sys
-from Utils import utils as ut
 import pdb
 import subprocess
-import glob
-import pytorch_lightning as pl
+import sys
+
+import matplotlib.pyplot as plt
 import numpy as np
-from torch.utils.data import random_split, DataLoader, Dataset
+import pytorch_lightning as pl
+from torch.utils.data import DataLoader, Dataset, random_split
 from tqdm import tqdm
+from Utils import utils as ut
 
 
 class MouseModule(pl.LightningDataModule):

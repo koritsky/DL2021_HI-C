@@ -1,13 +1,15 @@
 #the model for hicplus is take from https://github.com/wangjuan001/hicplus.git
-import torch
-from torch.autograd import Variable
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-from torch.utils import data
 import gzip
 import sys
+
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
+from torch.autograd import Variable
+from torch.utils import data
+
 conv2d1_filters_numbers = 8
 conv2d1_filters_size = 9
 conv2d2_filters_numbers = 8

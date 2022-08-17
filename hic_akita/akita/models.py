@@ -1,14 +1,15 @@
+import warnings
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import warnings
+
 warnings.filterwarnings("ignore")
 
-from .layers import *
 from .blocks import *
-
-from .utils import TARGET_MIN, TARGET_MAX, TARGET_MEAN, TARGET_STD
+from .layers import *
+from .utils import TARGET_MAX, TARGET_MEAN, TARGET_MIN, TARGET_STD
 
 
 class Model(nn.Module):

@@ -1,13 +1,16 @@
-import matplotlib.pyplot as plt
 import glob
-import torch
 import pdb
-import yaml
 import sys
+
+import matplotlib.pyplot as plt
+import torch
+import yaml
+
 sys.path.append(".")
-from yaml.loader import SafeLoader
 from Models.VAE_Module import VAE_Model
 from torch.nn import functional as F
+from yaml.loader import SafeLoader
+
 
 class VaeLoss(torch.nn.Module):
     def __init__(self, yaml_path, weight_path):

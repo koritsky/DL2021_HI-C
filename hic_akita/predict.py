@@ -1,13 +1,12 @@
 import os
 import sys
-import torch
-from tqdm import tqdm
-import numpy as np
-
-from akita.models import ModelAkita, ModelWGraph
-from akita.utils import get_dataloaders, from_upper_triu, convert_gr_to_rb
 
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
+from akita.models import ModelAkita, ModelWGraph
+from akita.utils import convert_gr_to_rb, from_upper_triu, get_dataloaders
+from tqdm import tqdm
 
 if __name__ == "__main__":
 

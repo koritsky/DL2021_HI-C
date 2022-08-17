@@ -3,6 +3,7 @@
 import torch
 from torch import nn
 
+
 class ResidualBlock(nn.Module):
     def __init__(self, channels):
         super(ResidualBlock, self).__init__()

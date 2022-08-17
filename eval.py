@@ -1,15 +1,13 @@
-import torch
+import argparse
+
 import numpy as np
-
-from metrics import get_scores
-
-from dataloader import get_dataloaders
-
 import pytorch_lightning as pl
+import torch
 from pytorch_lightning.loggers import NeptuneLogger
 from tqdm import tqdm
 
-import argparse
+from dataloader import get_dataloaders
+from metrics import get_scores
 
 # neptune_logger = NeptuneLogger(
 #             #offline_mode=True,

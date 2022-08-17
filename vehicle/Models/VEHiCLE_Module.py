@@ -1,14 +1,17 @@
-import torch.nn.functional as F
-import torch.nn as nn
-from . import VehicleGAN as  vgan 
-import torch
-import pdb
 import os
-import pytorch_lightning as pl
-from pytorch_lightning import Trainer
-from Utils.loss import vae_loss as vl
-from Utils.loss import insulation as ins
+import pdb
+
 import matplotlib.pyplot as plt
+import pytorch_lightning as pl
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from pytorch_lightning import Trainer
+from Utils.loss import insulation as ins
+from Utils.loss import vae_loss as vl
+
+from . import VehicleGAN as vgan
+
 # from neptune.new.types import File
 
 class GAN_Model(pl.LightningModule):

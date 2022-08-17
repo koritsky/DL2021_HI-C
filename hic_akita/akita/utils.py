@@ -1,13 +1,13 @@
 import os
+import pickle
 import sys
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pickle
 
-from .layers import UpperTri, Cropping2d
-
+from .layers import Cropping2d, UpperTri
 
 TARGET_MIN = -2.
 TARGET_MAX = 2.

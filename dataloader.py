@@ -1,9 +1,10 @@
 import os
-import sys
-import numpy as np
 import pickle
-from tqdm import tqdm
+import sys
+
+import numpy as np
 import torch
+from tqdm import tqdm
 
 enc = {"A": 0, "C": 1, "G": 2, "T": 3}
 

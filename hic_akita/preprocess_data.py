@@ -1,7 +1,8 @@
 import os
-import sys
-import numpy as np
 import pickle
+import sys
+
+import numpy as np
 from tqdm import tqdm
 
 enc = {"A": 0, "C": 1, "G": 2, "T": 3}

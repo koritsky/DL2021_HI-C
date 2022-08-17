@@ -1,17 +1,15 @@
+import itertools
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pytorch_lightning as pl
-from pytorch_lightning.loggers import NeptuneLogger
-
-import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import cm
-
-from torchvision import utils
 from neptune.new.types import File
-
-import itertools
+from pytorch_lightning.loggers import NeptuneLogger
+from torchvision import utils
 
 neptune_logger = NeptuneLogger(
     project="zybinmikhail/DL2021HI-C",
@@ -20,16 +18,17 @@ neptune_logger = NeptuneLogger(
 )
 
 
-import os, sys
+import os
+import sys
+
 sys.path.append(os.path.join(sys.path[0], "vehicle"))
 sys.path.append(os.path.join(sys.path[0], "hic_akita"))
-from vehicle.Models.VEHiCLE_Module import GAN_Model 
-
-from hic_akita.akita.models import ModelWGraph
-from hic_akita.akita.layers import Symmetrize2d
-
 from dataloader import get_dataloaders
+from hic_akita.akita.layers import Symmetrize2d
+from hic_akita.akita.models import ModelWGraph
 from metrics import get_scores
+from vehicle.Models.VEHiCLE_Module import GAN_Model
+
 
 class Dummy(nn.Module):
     def __init__(self):

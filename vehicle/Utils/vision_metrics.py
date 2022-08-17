@@ -1,28 +1,30 @@
 #the implementation of SSIM in this file is pulled from DeepHiC https://github.com/omegahh/DeepHiC
+import argparse
+import sys
+from math import exp
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from math import exp
-import numpy as np
 from Models.VEHiCLE_Module import GAN_Model
-from scipy.stats import pearsonr
-from scipy.stats import spearmanr
-import argparse
-import sys
+from scipy.stats import pearsonr, spearmanr
+
 sys.path.append(".")
 sys.path.append("../")
-import numpy as np
-from sklearn.decomposition import PCA
 import glob
-import yaml
-import matplotlib.pyplot as plt
-import torch
 import pdb
-from pytorch_lightning import Trainer
+
+import matplotlib.pyplot as plt
+import numpy as np
+import torch
+import tqdm as tqdm
+import yaml
 from Data.GM12878_DataModule import GM12878Module
 from Data.K562_DataModule import K562Module
-import tqdm as tqdm
+from pytorch_lightning import Trainer
+from sklearn.decomposition import PCA
+
 
 class SSIM(nn.Module):
     def __init__(self, window_size=11, size_average=True):

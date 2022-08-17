@@ -1,16 +1,16 @@
+import argparse
 import os
 import sys
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import argparse
-from sklearn.metrics import mean_absolute_error, mean_squared_error
-from scipy.stats import pearsonr, spearmanr
-from tqdm import tqdm
-
 from akita.models import ModelAkita, ModelWGraph
-from akita.utils import get_dataloaders, from_upper_triu
+from akita.utils import from_upper_triu, get_dataloaders
+from scipy.stats import pearsonr, spearmanr
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+from tqdm import tqdm
 
 
 def get_scores(preds, targets):

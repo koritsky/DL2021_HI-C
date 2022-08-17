@@ -1,8 +1,10 @@
-import torch.nn.functional as F
-import matplotlib.pyplot as plt
 import pdb
+
+import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import torch.nn.functional as F
+
 
 class computeInsulation(torch.nn.Module):
     def __init__(self, window_radius=10, deriv_size=10):

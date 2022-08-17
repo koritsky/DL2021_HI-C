@@ -1,13 +1,13 @@
 import pdb
 import sys
+
 sys.path.append(".")
-from pytorch_lightning import Trainer
 from Data.GM12878_DataModule import GM12878Module
 from Data.Mouse_DataModule import MouseModule
 from Models.VAE_Module import VAE_Model
-from pytorch_lightning.loggers import NeptuneLogger
+from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
-
+from pytorch_lightning.loggers import NeptuneLogger
 
 # dm      = GM12878Module()
 # dm.prepare_data()

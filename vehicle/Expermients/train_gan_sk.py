@@ -1,12 +1,12 @@
 import pdb
 import sys
+
 sys.path.append(".")
-from pytorch_lightning import Trainer
 # from Data.GM12878_DataModule import GM12878Module
 from Data.Mouse_DataModule import MouseModule
 from Models.VEHiCLE_Module import GAN_Model
+from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import NeptuneLogger
-
 
 # dm  = GM12878Module(batch_size=1, piece_size=269)
 # dm.prepare_data()
