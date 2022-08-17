@@ -16,6 +16,7 @@ def vstrans(d1, d2):
     #print("r2k", r2k)
     return r2k
 
+
 def get_scc(mat1, mat2):
     N = mat1.shape[0]
     corr_diag = np.zeros(len(range(N)))
@@ -23,19 +24,19 @@ def get_scc(mat1, mat2):
     for d in range(N):
         d1 = mat1.diagonal(d)
         d2 = mat2.diagonal(d)
-        
+
         if (d == 0) or (d == (N - 1)):
             corr_diag[d] = 0
         else:
-        # Compute raw pearson coeff for this diag
-            corr = np.corrcoef(d1, d2)[0,1]
+            # Compute raw pearson coeff for this diag
+            corr = np.corrcoef(d1, d2)[0, 1]
             if np.isnan(corr):
                 if np.std(d1) < 1e-5 and np.std(d2) < 1e-5:
                     corr = 1.0
-                else: 
+                else:
                     corr = 0.0
             corr_diag[d] = corr
-            
+
         # Compute weight for this diag
         r2k = vstrans(d1, d2)
         weight_diag[d] = len(d1) * r2k
@@ -51,11 +52,12 @@ def get_scc(mat1, mat2):
     #print("scc: ", scc)
     return scc
 
+
 def get_scores(preds, targets):
 
     preds = preds.cpu()
     targets = targets.cpu()
-    
+
     SCCs = []
     for mat1, mat2 in zip(preds, targets):
         SCC = get_scc(mat1.squeeze(0).numpy(), mat2.squeeze(0).numpy())
@@ -64,20 +66,20 @@ def get_scores(preds, targets):
 
     targets = np.reshape(targets, (-1,))
     preds = np.reshape(preds, (-1,))
-    
+
     scores = {
         "mae": mean_absolute_error(targets, preds),
         "mse": mean_squared_error(targets, preds),
         "pearson": pearsonr(targets, preds)[0],
         "spearman": spearmanr(targets, preds)[0],
-        "scc":np.mean(SCCs),
+        "scc": np.mean(SCCs),
     }
     return scores
 
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 
-     #mat1 = torch.rand((4, 1, 16, 16))
-     #mat2 = torch.ones((4, 1, 16, 16))
+    #mat1 = torch.rand((4, 1, 16, 16))
+    #mat2 = torch.ones((4, 1, 16, 16))
 
-     #print(get_scores(mat1, mat2))
+    #print(get_scores(mat1, mat2))

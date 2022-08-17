@@ -1,4 +1,13 @@
-#the implementation of SSIM in this file is pulled from DeepHiC https://github.com/omegahh/DeepHiC
+# the implementation of SSIM in this file is pulled from DeepHiC https://github.com/omegahh/DeepHiC
+from sklearn.decomposition import PCA
+from pytorch_lightning import Trainer
+from Data.K562_DataModule import K562Module
+from Data.GM12878_DataModule import GM12878Module
+import yaml
+import tqdm as tqdm
+import matplotlib.pyplot as plt
+import pdb
+import glob
 import argparse
 import sys
 from math import exp
@@ -12,18 +21,6 @@ from scipy.stats import pearsonr, spearmanr
 
 sys.path.append(".")
 sys.path.append("../")
-import glob
-import pdb
-
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
-import tqdm as tqdm
-import yaml
-from Data.GM12878_DataModule import GM12878Module
-from Data.K562_DataModule import K562Module
-from pytorch_lightning import Trainer
-from sklearn.decomposition import PCA
 
 
 class SSIM(nn.Module):
@@ -41,16 +38,19 @@ class SSIM(nn.Module):
 
     def _tohic(self, mat):
         mat.squeeze_()
-        return mat.numpy()#.astype(int)
+        return mat.numpy()  # .astype(int)
 
     def gaussian(self, width, sigma):
-        gauss = torch.Tensor([exp(-(x-width//2)**2 / float(2 * sigma**2)) for x in range(width)])
+        gauss = torch.Tensor(
+            [exp(-(x-width//2)**2 / float(2 * sigma**2)) for x in range(width)])
         return gauss / gauss.sum()
 
     def create_window(self, window_size, channel, sigma=3):
         _1D_window = self.gaussian(window_size, sigma).unsqueeze(1)
-        _2D_window = _1D_window.mm(_1D_window.t()).float().unsqueeze(0).unsqueeze(0)
-        window = _2D_window.expand(channel, 1, window_size, window_size).contiguous()
+        _2D_window = _1D_window.mm(
+            _1D_window.t()).float().unsqueeze(0).unsqueeze(0)
+        window = _2D_window.expand(
+            channel, 1, window_size, window_size).contiguous()
         return window
 
     def gaussian_filter(self, img, width, sigma=3):
@@ -68,20 +68,23 @@ class SSIM(nn.Module):
         mu2_sq = mu2.pow(2)
         mu1_mu2 = mu1 * mu2
 
-        sigma1_sq = F.conv2d(img1 * img1, window, padding=window_size // 2, groups=channel) - mu1_sq
-        sigma2_sq = F.conv2d(img2 * img2, window, padding=window_size // 2, groups=channel) - mu2_sq
-        sigma12 = F.conv2d(img1 * img2, window, padding=window_size // 2, groups=channel) - mu1_mu2
+        sigma1_sq = F.conv2d(img1 * img1, window,
+                             padding=window_size // 2, groups=channel) - mu1_sq
+        sigma2_sq = F.conv2d(img2 * img2, window,
+                             padding=window_size // 2, groups=channel) - mu2_sq
+        sigma12 = F.conv2d(img1 * img2, window,
+                           padding=window_size // 2, groups=channel) - mu1_mu2
 
         C1 = 0.01 ** 2
         C2 = 0.03 ** 2
 
-        ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / ((mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2))
+        ssim_map = ((2 * mu1_mu2 + C1) * (2 * sigma12 + C2)) / \
+            ((mu1_sq + mu2_sq + C1) * (sigma1_sq + sigma2_sq + C2))
 
         if size_average:
             return ssim_map.mean()
         else:
             return ssim_map.mean(1).mean(1).mean(1)
-
 
     def ssim(self, img1, img2, window_size=11, size_average=True):
         img1 = _toimg(img1).unsqueeze(0)
@@ -91,8 +94,6 @@ class SSIM(nn.Module):
         window = window.type_as(img1)
 
         return self._ssim(img1, img2, window, window_size, channel, size_average)
-
-
 
     def forward(self, img1, img2):
         (_, channel, _, _) = img1.size()
@@ -112,25 +113,23 @@ class SSIM(nn.Module):
         return self._ssim(img1, img2, window, self.window_size, channel, self.size_average)
 
 
-
 class VisionMetrics:
     def __init__(self):
-        self.ssim         = SSIM()
+        self.ssim = SSIM()
         self.metric_logs = {
-            "pre_pcc":[],
-            "pas_pcc":[],
-            "pre_spc":[],
-            "pas_spc":[],
-            "pre_psnr":[],
-            "pas_psnr":[],
-            "pre_ssim":[],
-            "pas_ssim":[],
-            "pre_mse":[],
-            "pas_mse":[],
-            "pre_snr":[],
-            "pas_snr":[]
-            }
-
+            "pre_pcc": [],
+            "pas_pcc": [],
+            "pre_spc": [],
+            "pas_spc": [],
+            "pre_psnr": [],
+            "pas_psnr": [],
+            "pre_ssim": [],
+            "pas_ssim": [],
+            "pre_mse": [],
+            "pas_mse": [],
+            "pre_snr": [],
+            "pas_snr": []
+        }
 
     def _logSSIM(self, data, target, output):
         self.metric_logs['pre_ssim'].append(self.compareSSIM(data, target))
@@ -181,55 +180,58 @@ class VisionMetrics:
 
     def setDataset(self, chro, res=10000, piece_size=269, cell_line="GM12878"):
         if cell_line == "GM12878":
-            self.dm_test      = GM12878Module(batch_size=1, res=res, piece_size=piece_size)
+            self.dm_test = GM12878Module(
+                batch_size=1, res=res, piece_size=piece_size)
         if cell_line == "K562":
-            self.dm_test      = K562Module(batch_size=1, res=res, piece_size=piece_size)
+            self.dm_test = K562Module(
+                batch_size=1, res=res, piece_size=piece_size)
         self.dm_test.prepare_data()
         self.dm_test.setup(stage=chro)
 
     def getMetrics(self, model, spliter):
         self.metric_logs = {
-            "pre_pcc":[],
-            "pas_pcc":[],
-            "pre_spc":[],
-            "pas_spc":[],
-            "pre_psnr":[],
-            "pas_psnr":[],
-            "pre_ssim":[],
-            "pas_ssim":[],
-            "pre_mse":[],
-            "pas_mse":[],
-            "pre_snr":[],
-            "pas_snr":[]
-            }
+            "pre_pcc": [],
+            "pas_pcc": [],
+            "pre_spc": [],
+            "pas_spc": [],
+            "pre_psnr": [],
+            "pas_psnr": [],
+            "pre_ssim": [],
+            "pas_ssim": [],
+            "pre_mse": [],
+            "pas_mse": [],
+            "pre_snr": [],
+            "pas_snr": []
+        }
 
         for e, epoch in enumerate(tqdm(self.dm_test.test_dataloader())):
-            print(str(e)+"/"+str(self.dm_test.test_dataloader().dataset.data.shape[0]))
+            print(str(e)+"/" +
+                  str(self.dm_test.test_dataloader().dataset.data.shape[0]))
             data, full_target, info = epoch
-            target                  = full_target[:,:,6:-6,6:-6]
-            filter_data             = data[:,:,6:-6,6:-6]
-            if spliter == "vehicle" or spliter == "large":  #no need to seperate pieces
-                output                  = model(data).detach()
+            target = full_target[:, :, 6:-6, 6:-6]
+            filter_data = data[:, :, 6:-6, 6:-6]
+            if spliter == "vehicle" or spliter == "large":  # no need to seperate pieces
+                output = model(data).detach()
 
-            if spliter == "hicplus" or spliter == "hicsr":  #separater into 40x40 windows
-                output   = torch.zeros((1,1,269,269))
+            if spliter == "hicplus" or spliter == "hicsr":  # separater into 40x40 windows
+                output = torch.zeros((1, 1, 269, 269))
                 for i in range(0, 269-40, 28):
-                    for j in range(0,269-40,28):
-                        temp = data[:,:,i:i+40, j:j+40]
-                        output[:,:,i+6:i+34, j+6:j+34] = model(temp)
-                output = output[:,:,6:-6,6:-6].detach()
-            
-            if spliter == "deephic" or spliter=='vae':
-                output   = torch.zeros((1,1,269,269))
+                    for j in range(0, 269-40, 28):
+                        temp = data[:, :, i:i+40, j:j+40]
+                        output[:, :, i+6:i+34, j+6:j+34] = model(temp)
+                output = output[:, :, 6:-6, 6:-6].detach()
+
+            if spliter == "deephic" or spliter == 'vae':
+                output = torch.zeros((1, 1, 269, 269))
                 for i in range(0, 269-40, 28):
-                    for j in range(0,269-40,28):
-                        temp = data[:,:,i:i+40, j:j+40]
-                        output[:,:,i+6:i+34, j+6:j+34] = model(temp)[:,:,6:-6,6:-6]
-                output = output[:,:,6:-6,6:-6].detach()
+                    for j in range(0, 269-40, 28):
+                        temp = data[:, :, i:i+40, j:j+40]
+                        output[:, :, i+6:i+34, j+6:j +
+                               34] = model(temp)[:, :, 6:-6, 6:-6]
+                output = output[:, :, 6:-6, 6:-6].detach()
 
             if spliter == "large_deephic":
-                output  = model(data).detach()[:,:,6:-6,6:-6]
-
+                output = model(data).detach()[:, :, 6:-6, 6:-6]
 
             self._logPCC(data=filter_data, target=target, output=output)
             self._logSPC(data=filter_data, target=target, output=output)
@@ -240,11 +242,12 @@ class VisionMetrics:
         print(list(map(self.log_means, self.metric_logs.keys())))
         return self.metric_logs
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     visionMetrics = VisionMetrics()
     visionMetrics.setDataset(20, cell_line="K562")
-    WEIGHT_PATH   = "deepchromap_weights.ckpt"
-    model         = GAN_Model()
+    WEIGHT_PATH = "deepchromap_weights.ckpt"
+    model = GAN_Model()
     pretrained_model = model.load_from_checkpoint(WEIGHT_PATH)
     pretrained_model.freeze()
     visionMetrics.getMetrics(model=pretrained_model, spliter=False)

@@ -39,7 +39,8 @@ def run(model, dataloader):
     pred_tri = np.concatenate(pred_tri_batches)
     pred_imgs = []
     for p in pred_tri:
-        pred_imgs.append(from_upper_triu(p, model.image_size, model.diagonal_offset))
+        pred_imgs.append(from_upper_triu(
+            p, model.image_size, model.diagonal_offset))
     pred_imgs = np.stack(pred_imgs)
     return targets, target_tri, pred_imgs, pred_tri
 
@@ -48,6 +49,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("model", choices=["akita", "ours", "ours_symm"])
     return parser.parse_args()
+
 
 """
 akita
@@ -72,27 +74,28 @@ test  0.283 0.149    0.611    0.559
 
 if __name__ == "__main__":
     args = parse_args()
-    dataloader_train, dataloader_val, dataloader_test = get_dataloaders(target_crop=10,)
+    dataloader_train, dataloader_val, dataloader_test = get_dataloaders(
+        target_crop=10,)
 
     device = "cuda"
     if args.model == "akita":
         model = ModelAkita().to(device)
-        filename_checkpoint = os.path.join("lightning_logs", "version_225", 
-            "checkpoints", "epoch=88-step=85083.ckpt")
+        filename_checkpoint = os.path.join("lightning_logs", "version_225",
+                                           "checkpoints", "epoch=88-step=85083.ckpt")
         filename_checkpoint_out = os.path.join("checkpoints", "akita.pth")
     elif args.model == "ours":
         model = ModelWGraph().to(device)
         filename_checkpoint = os.path.join("lightning_logs", "version_227",
-            "checkpoints", "epoch=93-step=89863.ckpt")
+                                           "checkpoints", "epoch=93-step=89863.ckpt")
         filename_checkpoint_out = os.path.join("checkpoints", "ours.pth")
     elif args.model == "ours_symm":
         model = ModelWGraph(symmetrize=True).to(device)
         filename_checkpoint = os.path.join("lightning_logs", "version_229",
-            "checkpoints", "epoch=98-step=94643.ckpt")
+                                           "checkpoints", "epoch=98-step=94643.ckpt")
         filename_checkpoint_out = os.path.join("checkpoints", "ours_symm.pth")
 
     model.load_state_dict({k[6:]: v for k, v in
-        torch.load(filename_checkpoint, map_location=device)["state_dict"].items()})
+                           torch.load(filename_checkpoint, map_location=device)["state_dict"].items()})
     model.eval()
     # torch.save(model.state_dict(), filename_checkpoint_out)
 
@@ -102,10 +105,11 @@ if __name__ == "__main__":
     scores_val = get_scores(target_tri, pred_tri)
     _, target_tri, _, pred_tri = run(model, dataloader_test)
     scores_test = get_scores(target_tri, pred_tri)
-    print("{:5s} {:>5s} {:>5s} {:>8s} {:>8s}".format("", "mae", "mse", "pearson", "spearman"))
+    print("{:5s} {:>5s} {:>5s} {:>8s} {:>8s}".format(
+        "", "mae", "mse", "pearson", "spearman"))
     print("{:5s} {:5.3f} {:5.3f} {:8.3f} {:8.3f}".format("train",
-        scores_train["mae"], scores_train["mse"], scores_train["pearson"], scores_train["spearman"]))
+                                                         scores_train["mae"], scores_train["mse"], scores_train["pearson"], scores_train["spearman"]))
     print("{:5s} {:5.3f} {:5.3f} {:8.3f} {:8.3f}".format("val",
-        scores_val["mae"], scores_val["mse"], scores_val["pearson"], scores_val["spearman"]))
+                                                         scores_val["mae"], scores_val["mse"], scores_val["pearson"], scores_val["spearman"]))
     print("{:5s} {:5.3f} {:5.3f} {:8.3f} {:8.3f}".format("test",
-        scores_test["mae"], scores_test["mse"], scores_test["pearson"], scores_test["spearman"]))
+                                                         scores_test["mae"], scores_test["mse"], scores_test["pearson"], scores_test["spearman"]))

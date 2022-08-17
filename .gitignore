@@ -1,3 +1,4 @@
+dataset/*
 .spyproject/
 .PAT
 __pycache__/

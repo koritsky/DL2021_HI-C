@@ -1,4 +1,4 @@
-#the model for hicplus is take from https://github.com/wangjuan001/hicplus.git
+# the model for hicplus is take from https://github.com/wangjuan001/hicplus.git
 import gzip
 import sys
 
@@ -17,14 +17,18 @@ conv2d2_filters_size = 1
 conv2d3_filters_numbers = 1
 conv2d3_filters_size = 5
 
+
 class Net(nn.Module):
     def __init__(self, D_in, D_out):
         super(Net, self).__init__()
         # 1 input image channel, 6 output channels, 5x5 square convolution
         # kernel
-        self.conv1 = nn.Conv2d(1, conv2d1_filters_numbers, conv2d1_filters_size)
-        self.conv2 = nn.Conv2d(conv2d1_filters_numbers, conv2d2_filters_numbers, conv2d2_filters_size)
-        self.conv3 = nn.Conv2d(conv2d2_filters_numbers, 1, conv2d3_filters_size)
+        self.conv1 = nn.Conv2d(
+            1, conv2d1_filters_numbers, conv2d1_filters_size)
+        self.conv2 = nn.Conv2d(conv2d1_filters_numbers,
+                               conv2d2_filters_numbers, conv2d2_filters_size)
+        self.conv3 = nn.Conv2d(conv2d2_filters_numbers,
+                               1, conv2d3_filters_size)
 
     def forward(self, x):
         #print("start forwardingf")
@@ -35,6 +39,8 @@ class Net(nn.Module):
         x = self.conv3(x)
         x = F.relu(x)
         return x
+
+
 '''
     def num_flat_features(self, x):
         size = x.size()[1:]  # all dimensions except the batch dimension
@@ -115,4 +121,3 @@ print('conv1.bias.grad after backward')
 print(net.conv1.weight.grad)
 
 '''
-

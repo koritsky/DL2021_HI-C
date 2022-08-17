@@ -1,5 +1,5 @@
-#the model for hicsr is taken form the authors github
-#https://github.com/PSI-Lab/HiCSR
+# the model for hicsr is taken form the authors github
+# https://github.com/PSI-Lab/HiCSR
 import torch
 from torch import nn
 
@@ -21,30 +21,31 @@ class ResidualBlock(nn.Module):
         res = self.bn2(res)
         return x + res
 
+
 class Generator(nn.Module):
     def __init__(self, num_res_blocks=5):
         super(Generator, self).__init__()
 
         self.pre_res_block = nn.Sequential(
-                nn.Conv2d(1, 64, kernel_size=3),
-                nn.ReLU(),
-                )
+            nn.Conv2d(1, 64, kernel_size=3),
+            nn.ReLU(),
+        )
 
         res_blocks = [ResidualBlock(64) for _ in range(num_res_blocks)]
         self.res_blocks = nn.Sequential(*res_blocks)
 
         self.post_res_block = nn.Sequential(
-                nn.Conv2d(64, 64, kernel_size=3, padding=1),
-                nn.BatchNorm2d(64)
-                )
+            nn.Conv2d(64, 64, kernel_size=3, padding=1),
+            nn.BatchNorm2d(64)
+        )
 
         self.final_block = nn.Sequential(
-                nn.Conv2d(64, 128, kernel_size=3),
-                nn.Conv2d(128, 128, kernel_size=3),
-                nn.Conv2d(128, 256, kernel_size=3),
-                nn.Conv2d(256, 256, kernel_size=3),
-                nn.Conv2d(256, 1, kernel_size=3),
-                )
+            nn.Conv2d(64, 128, kernel_size=3),
+            nn.Conv2d(128, 128, kernel_size=3),
+            nn.Conv2d(128, 256, kernel_size=3),
+            nn.Conv2d(256, 256, kernel_size=3),
+            nn.Conv2d(256, 1, kernel_size=3),
+        )
 
     def forward(self, x):
         first_block = self.pre_res_block(x)
@@ -66,22 +67,24 @@ class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
         self.conv = nn.Sequential(
-                nn.Conv2d(1, 64, kernel_size=4, stride=2, padding=1, bias=False),
-                nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(1, 64, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.LeakyReLU(0.2, inplace=True),
 
-                nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1, bias=False),
-                nn.BatchNorm2d(128),
-                nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
 
-                nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1, bias=False),
-                nn.BatchNorm2d(256),
-                nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(128, 256, kernel_size=4,
+                      stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, inplace=True),
 
-                nn.Conv2d(256, 512, kernel_size=4, stride=2, padding=1, bias=False),
-                nn.BatchNorm2d(512),
-                nn.LeakyReLU(0.2, inplace=True),
+            nn.Conv2d(256, 512, kernel_size=4,
+                      stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.2, inplace=True),
 
-                nn.Conv2d(512, 1, kernel_size=1, stride=1, padding=0, bias=False))
+            nn.Conv2d(512, 1, kernel_size=1, stride=1, padding=0, bias=False))
 
     def forward(self, x):
         x = self.conv(x)
@@ -94,4 +97,3 @@ class Discriminator(nn.Module):
             elif isinstance(module, nn.BatchNorm2d):
                 nn.init.normal_(module.weight.data, 1.0, 0.02)
                 nn.init.constant_(module.bias.data, 0)
-

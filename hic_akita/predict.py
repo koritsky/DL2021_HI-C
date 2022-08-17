@@ -22,16 +22,18 @@ if __name__ == "__main__":
     }
     if name == "akita":
         model = ModelAkita(**kwargs).to(device)
-        model.load_state_dict(torch.load("./checkpoints/akita.pth", map_location=device))
+        model.load_state_dict(torch.load(
+            "./checkpoints/akita.pth", map_location=device))
     elif name == "ours":
         model = ModelWGraph(**kwargs).to(device)
-        model.load_state_dict(torch.load("./checkpoints/ours.pth", map_location=device))
+        model.load_state_dict(torch.load(
+            "./checkpoints/ours.pth", map_location=device))
     elif name == "ours_symm":
         model = ModelWGraph(symmetrize=True, **kwargs).to(device)
-        model.load_state_dict(torch.load("./checkpoints/ours_symm.pth", map_location=device))
+        model.load_state_dict(torch.load(
+            "./checkpoints/ours_symm.pth", map_location=device))
     model.eval()
 
-    
     _, _, dataloader = get_dataloaders(target_crop=0)
 
     predictions = []

@@ -1,5 +1,5 @@
-#The code for deephic is taken from the authors github
-#https://github.com/omegahh/DeepHiC
+# The code for deephic is taken from the authors github
+# https://github.com/omegahh/DeepHiC
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,6 +7,7 @@ import torch.nn.functional as F
 
 def swish(x):
     return x * torch.sigmoid(x)
+
 
 class residualBlock(nn.Module):
     def __init__(self, channels, k=3, s=1):
@@ -20,15 +21,17 @@ class residualBlock(nn.Module):
 
     def forward(self, x):
         residual = swish(self.bn1(self.conv1(x)))
-        residual =       self.bn2(self.conv2(residual))
+        residual = self.bn2(self.conv2(residual))
         return x + residual
-    
+
+
 class Generator(nn.Module):
     def __init__(self, scale_factor, in_channel=3, resblock_num=5):
         super(Generator, self).__init__()
-        self.conv1 = nn.Conv2d(in_channel, 64, kernel_size=9, stride=1, padding=4)
+        self.conv1 = nn.Conv2d(
+            in_channel, 64, kernel_size=9, stride=1, padding=4)
         # have a swish here in forward
-        
+
         resblocks = [residualBlock(64) for _ in range(resblock_num)]
         self.resblocks = nn.Sequential(*resblocks)
 
@@ -36,14 +39,16 @@ class Generator(nn.Module):
         self.bn2 = nn.BatchNorm2d(64)
         # have a swish here in forward
 
-        self.conv3 = nn.Conv2d(64, in_channel, kernel_size=9, stride=1, padding=4)
+        self.conv3 = nn.Conv2d(
+            64, in_channel, kernel_size=9, stride=1, padding=4)
 
     def forward(self, x):
         emb = swish(self.conv1(x))
-        x   =       self.resblocks(emb)
-        x   = swish(self.bn2(self.conv2(x)))
-        x   =       self.conv3(x + emb)
+        x = self.resblocks(emb)
+        x = swish(self.bn2(self.conv2(x)))
+        x = self.conv3(x + emb)
         return (torch.tanh(x) + 1) / 2
+
 
 class Discriminator(nn.Module):
     def __init__(self, in_channel=3):

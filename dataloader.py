@@ -8,9 +8,11 @@ from tqdm import tqdm
 
 enc = {"A": 0, "C": 1, "G": 2, "T": 3}
 
-CHROMOSOMES_TRAIN = ['chr4', 'chr10', 'chr6', 'chr13', 'chr19', 'chr16', 'chr18', 'chr17', 'chr2', 'chr3', 'chr5', 'chr9', 'chr1', 'chr12', 'chr7', 'chr15']
+CHROMOSOMES_TRAIN = ['chr4', 'chr10', 'chr6', 'chr13', 'chr19', 'chr16', 'chr18',
+                     'chr17', 'chr2', 'chr3', 'chr5', 'chr9', 'chr1', 'chr12', 'chr7', 'chr15']
 CHROMOSOMES_VAL = ['chr11', 'chr14']
 CHROMOSOMES_TEST = ['chrX', 'chr8']
+
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, sequences, imgs_obs_low, imgs_high, imgs_obs_high):
@@ -19,9 +21,11 @@ class Dataset(torch.utils.data.Dataset):
         self.imgs_obs_low = imgs_obs_low
         self.imgs_high = imgs_high
         self.imgs_obs_high = imgs_obs_high
+
     def __getitem__(self, index):
         return self.sequences[index], self.imgs_obs_low[index], \
             self.imgs_high[index], self.imgs_obs_high[index]
+
     def __len__(self):
         return len(self.sequences)
 
@@ -40,7 +44,7 @@ def get_dataloaders(
         shuffle=True,
         batch_size=2,
         **kwargs,
-        ):
+):
 
     if os.path.isfile(filename_sequences_onehot):
         sequences = np.load(filename_sequences_onehot)
@@ -55,7 +59,6 @@ def get_dataloaders(
             sequences_array.append(sequence_onehot.T)
         sequences = np.array(sequences_array)
        #np.save("./dataset/sequences_onehot.npy", sequences)
-    
 
     tensor_low_observed = np.load(filename_low_observed)
     tensor_high = np.load(filename_high)
@@ -102,18 +105,18 @@ def get_dataloaders(
 
     kwargs.update({"batch_size": batch_size})
     dataloader_train = torch.utils.data.DataLoader(dataset_train,
-        collate_fn=collate_fn, shuffle=shuffle, **kwargs)
+                                                   collate_fn=collate_fn, shuffle=shuffle, **kwargs)
     dataloader_val = torch.utils.data.DataLoader(dataset_val,
-        collate_fn=collate_fn, **kwargs)
+                                                 collate_fn=collate_fn, **kwargs)
     dataloader_test = torch.utils.data.DataLoader(dataset_test,
-        collate_fn=collate_fn, **kwargs)
+                                                  collate_fn=collate_fn, **kwargs)
 
     return dataloader_train, dataloader_val, dataloader_test
 
 
 if __name__ == "__main__":
     dataloader_train, dataloader_val, dataloader_test = get_dataloaders()
-    
+
     for b in tqdm(dataloader_val):
         seq, t_low, t_high, t_high_2 = b
         print(t_low.shape)

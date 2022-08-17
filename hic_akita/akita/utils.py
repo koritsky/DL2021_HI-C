@@ -20,8 +20,10 @@ class Dataset(torch.utils.data.Dataset):
         super().__init__()
         self.sequences = sequences
         self.targets = targets
+
     def __getitem__(self, index):
         return self.sequences[index], self.targets[index]
+
     def __len__(self):
         return len(self.sequences)
 
@@ -34,8 +36,8 @@ def get_dataloaders(
         batch_size=2,
         num_workers=2,
         **kwargs,
-        ):
-    
+):
+
     data = np.load(filename)
     sequences = data["sequences"]
     targets = data["targets"]
@@ -43,13 +45,16 @@ def get_dataloaders(
         data["indexes_train"], data["indexes_val"], data["indexes_test"]
 
     dataset_train = Dataset(
-        sequences[indexes_train] if isinstance(sequences, np.ndarray) else [sequences[i] for i in indexes_train],
+        sequences[indexes_train] if isinstance(sequences, np.ndarray) else [
+            sequences[i] for i in indexes_train],
         targets[indexes_train],)
     dataset_val = Dataset(
-        sequences[indexes_val] if isinstance(sequences, np.ndarray) else [sequences[i] for i in indexes_val],
+        sequences[indexes_val] if isinstance(sequences, np.ndarray) else [
+            sequences[i] for i in indexes_val],
         targets[indexes_val],)
     dataset_test = Dataset(
-        sequences[indexes_test] if isinstance(sequences, np.ndarray) else [sequences[i] for i in indexes_test],
+        sequences[indexes_test] if isinstance(sequences, np.ndarray) else [
+            sequences[i] for i in indexes_test],
         targets[indexes_test])
 
     upper_tri = UpperTri(diagonal_offset=diagonal_offset)
@@ -71,18 +76,18 @@ def get_dataloaders(
 
     kwargs.update({"batch_size": batch_size, "num_workers": num_workers})
     dataloader_train = torch.utils.data.DataLoader(dataset_train,
-        collate_fn=collate_fn, shuffle=shuffle, **kwargs)
+                                                   collate_fn=collate_fn, shuffle=shuffle, **kwargs)
     dataloader_val = torch.utils.data.DataLoader(dataset_val,
-        collate_fn=collate_fn, **kwargs)
+                                                 collate_fn=collate_fn, **kwargs)
     dataloader_test = torch.utils.data.DataLoader(dataset_test,
-        collate_fn=collate_fn, **kwargs)
+                                                  collate_fn=collate_fn, **kwargs)
 
     return dataloader_train, dataloader_val, dataloader_test
 
 
 def from_upper_triu(vector_repr, matrix_len, num_diags):
-    z = np.zeros((matrix_len,matrix_len))
-    triu_tup = np.triu_indices(matrix_len,num_diags)
+    z = np.zeros((matrix_len, matrix_len))
+    triu_tup = np.triu_indices(matrix_len, num_diags)
     z[triu_tup] = vector_repr
     return z + z.T
 
@@ -94,7 +99,7 @@ def convert_gr_to_rb(image):
     b2 = image < 0
     image = (image + 2) / 4
     image3 = torch.zeros((3, image.shape[0], image.shape[1]), device=image.device,
-        dtype=image.dtype)
+                         dtype=image.dtype)
     for i in range(3):
         image3[i][b1] = 1. - (1. - color_red[i])*2*(image[b1] - 0.5)
         image3[i][b2] = 1. - (1. - color_blue[i])*2*(0.5 - image[b2])

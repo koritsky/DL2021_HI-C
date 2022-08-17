@@ -18,27 +18,30 @@ from metrics import get_scores
 
 _, _, test_set = get_dataloaders()
 
+
 @torch.no_grad()
 def main(model, test_set, gpu=None):
 
-
-    trainer = pl.Trainer(#logger=neptune_logger,
-                        max_epochs=30,
-                        #limit_test_batches=10,
-                        gpus=gpu,
-                        )
+    trainer = pl.Trainer(  # logger=neptune_logger,
+        max_epochs=30,
+        # limit_test_batches=10,
+        gpus=gpu,
+    )
 
     trainer.test(model, test_dataloaders=test_set)
-    
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', choices=['conv', 'graph'])
-    parser.add_argument('--plot', help='number of model outputs to plot, if 0 does not plot at all', type=int, default=0)
-    parser.add_argument("--checkpoint", help="path to weights checkpoint file", default=None)
+    parser.add_argument(
+        '--plot', help='number of model outputs to plot, if 0 does not plot at all', type=int, default=0)
+    parser.add_argument(
+        "--checkpoint", help="path to weights checkpoint file", default=None)
     parser.add_argument('--cuda', type=int, choices=[1, 0])
     args = parser.parse_args()
-    
+
     if args.model == 'conv':
         from hypermodel import HyperModel
         model = HyperModel()
@@ -51,17 +54,16 @@ if __name__ == "__main__":
         if args.checkpoint is None:
             args.checkpoint = "hypermodel-graph.pth"
         model.load_state_dict(torch.load(args.checkpoint))
-    
 
     _, _, test_set = get_dataloaders()
-    
+
     model.eval()
     if args.cuda:
         model.cuda()
 
     cuda = 1 if args.cuda else None
     main(model, test_set, gpu=cuda)
-    
+
     if args.plot:
         outputs = []
         with torch.no_grad():
@@ -76,7 +78,7 @@ if __name__ == "__main__":
 
                 if i >= args.plot:
                     break
-            
+
             outputs = torch.cat(outputs, dim=0)
             colorized_output = model.get_colors(outputs)
             figure = model._construct_grid(colorized_output)
