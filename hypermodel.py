@@ -1,32 +1,32 @@
+import sys
+import os
+sys.path.append(os.path.join(sys.path[0], "vehicle"))
+sys.path.append(os.path.join(sys.path[0], "hic_akita"))
+
 from vehicle.Models.VEHiCLE_Module import GAN_Model
 from metrics import get_scores
 from hic_akita.akita.models import ModelAkita
 from hic_akita.akita.layers import Symmetrize2d
 from dataloader import get_dataloaders
-import sys
-import os
-import itertools
 
+import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import yaml
 from matplotlib import cm
-from neptune.new.types import File
 from pytorch_lightning.loggers import NeptuneLogger
 from torchvision import utils
 
+logger_params = yaml.safe_load(open("logger_params.yaml", "r"))
 neptune_logger = NeptuneLogger(
-    project="zybinmikhail/DL2021HI-C",
-    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiIyZjEyYjc2YS1kMzQyLTQyMzUtYTI1My0yYjFhODcwZWUxNGIifQ==",
+    project=logger_params['project'],
+    api_token=logger_params['api_token'],
     tags=['Another training run'],
 )
-
-
-sys.path.append(os.path.join(sys.path[0], "vehicle"))
-sys.path.append(os.path.join(sys.path[0], "hic_akita"))
 
 
 class Dummy(nn.Module):
@@ -74,51 +74,51 @@ class HyperModel(pl.LightningModule):
         # cm.ScalarMappable(cmap=cm.RdBu_r)
         self.mapper = cm.get_cmap('RdBu_r')
 
+
     def configure_optimizers(self):
         all_params = list(self.akita.parameters(
         )) + list(self.head.parameters()) + list(self.vehicle.parameters())
         opt = torch.optim.AdamW(all_params, lr=1e-5, weight_decay=1e-5)
         return [opt]
 
+
     def akita_forward(self, sequence):
         return self.akita(sequence).unsqueeze(1)
+
 
     # @torch.no_grad()
     def vehicle_forward(self, low_img):
         return self.vehicle(low_img)
 
-    def forward(self, sequence, low_img):
 
+    def forward(self, sequence, low_img):
         akita_output = self.akita_forward(sequence)
         vehicle_output = self.vehicle_forward(low_img.unsqueeze(1))
-
         # stack along the channel dimension
         combined_input = torch.cat(
             [(akita_output + 2 / 4), vehicle_output], dim=1)
         output = self.head(combined_input)
-
         return output
+
 
     def training_step(self, batch, batch_idx):
-
         output = self._step(batch)
-
         return output
 
-    def training_epoch_end(self, outputs):
 
+    def training_epoch_end(self, outputs):
         self._epoch_logging(outputs, phase='train')
+
 
     @torch.no_grad()
     def validation_step(self, batch, batch_idx):
-
         output = self._step(batch)
-
         return output
 
-    def validation_epoch_end(self, outputs):
 
+    def validation_epoch_end(self, outputs):
         self._epoch_logging(outputs, phase='val')
+
 
     def _step(self, batch):
 
@@ -195,67 +195,45 @@ class HyperModel(pl.LightningModule):
                                     for o in outputs[:6]], dim=0).cpu()
 
         ###save images###
-        self.log_pictures(akita_img=akita_output,
-                          vehicle_img=vehicle_output,
-                          final_img=final_output,
-                          high_img=high_imgs,
-                          high_img_akita=high_imgs_akita,
-
-                          akita_metrics=akita_metrics[:6],
-                          vehicle_metrics=vehicle_metrics[:6],
-                          final_metrics=final_metrics[:6],
-
-                          phase=phase)
+        self.log_pictures(
+            akita_img=akita_output,
+            vehicle_img=vehicle_output,
+            final_img=final_output,
+            high_img=high_imgs,
+            high_img_akita=high_imgs_akita,
+            akita_metrics=akita_metrics[:6],
+            vehicle_metrics=vehicle_metrics[:6],
+            final_metrics=final_metrics[:6],
+            phase=phase
+        )
         ###logging####
-        # x=self.current_epoch, y=averaged_loss)
-        self.logger.experiment.log_metric(
-            '{}/loss'.format(phase), averaged_loss)
-        # x=self.current_epoch,  y=averaged_akita_loss)
-        self.logger.experiment.log_metric(
-            '{}/akita_loss'.format(phase), averaged_akita_loss)
-        # x=self.current_epoch, y=averaged_vehicle_loss)
-        self.logger.experiment.log_metric(
-            '{}/vehicle_loss'.format(phase), averaged_vehicle_loss)
+        self.log(f"{phase}/loss", averaged_loss)
+        self.log(f"{phase}/akita_loss", averaged_akita_loss)
+        self.log(f"{phase}/vehicle_loss", averaged_vehicle_loss)
 
-        self.log_metrics(akita_metrics=akita_metrics,
-                         final_metrics=final_metrics,
-                         vehicle_metrics=vehicle_metrics,
+        self.log_metrics(
+            akita_metrics=akita_metrics,
+            final_metrics=final_metrics,
+            vehicle_metrics=vehicle_metrics,
+            phase=phase
+        )
 
-                         phase=phase)
 
     def log_metrics(self, akita_metrics, final_metrics, vehicle_metrics, phase):
         akita_metrics = list(itertools.chain(*akita_metrics))
         final_metrics = list(itertools.chain(*final_metrics))
         vehicle_metrics = list(itertools.chain(*vehicle_metrics))
-        self.logger.experiment.log_metric(
-            '{}/final_mse'.format(phase), np.mean(final_metrics[::4]))
-        self.logger.experiment.log_metric(
-            '{}/final_spearman'.format(phase), np.mean(final_metrics[1::4]))
-        self.logger.experiment.log_metric(
-            '{}/final_pearson'.format(phase), np.mean(final_metrics[2::4]))
-        self.logger.experiment.log_metric(
-            '{}/final_scc'.format(phase), np.mean(final_metrics[3::4]))
+        for name, metrics in zip(
+                ["final", "akita", "vehicle"],
+                [final_metrics, akita_metrics, vehicle_metrics]
+                ):
+            self.log(f'{phase}/{name}_mse', np.mean(metrics[::4]))
+            self.log(f'{phase}/final_spearman'.format(phase), np.mean(metrics[1::4]))
+            self.log(f'{phase}/final_pearson'.format(phase), np.mean(metrics[2::4]))
+            self.log(f'{phase}/final_scc'.format(phase), np.mean(metrics[3::4]))
 
-        self.logger.experiment.log_metric(
-            '{}/akita_mse'.format(phase), np.mean(akita_metrics[::4]))
-        self.logger.experiment.log_metric(
-            '{}/akita_spearman'.format(phase), np.mean(akita_metrics[1::4]))
-        self.logger.experiment.log_metric(
-            '{}/akita_pearson'.format(phase), np.mean(akita_metrics[2::4]))
-        self.logger.experiment.log_metric(
-            '{}/akita_scc'.format(phase), np.mean(akita_metrics[3::4]))
-
-        self.logger.experiment.log_metric(
-            '{}/vehicle_mse'.format(phase), np.mean(vehicle_metrics[::4]))
-        self.logger.experiment.log_metric(
-            '{}/vehicle_spearman'.format(phase), np.mean(vehicle_metrics[1::4]))
-        self.logger.experiment.log_metric(
-            '{}/vehicle_pearson'.format(phase), np.mean(vehicle_metrics[2::4]))
-        self.logger.experiment.log_metric(
-            '{}/vehicle_scc'.format(phase), np.mean(vehicle_metrics[3::4]))
 
     def _construct_grid(self, img, metrics=None):
-
         bs = img.shape[0]  # number of images
         fig, ax = plt.subplots(1, bs, sharey=True, figsize=(15*bs, 15))
         fig.tight_layout(pad=3.0)
@@ -267,53 +245,50 @@ class HyperModel(pl.LightningModule):
             ax[i].set_xticks([])  # off ticks
             ax[i].set_yticks([])
 
-            if metrics is not None:
-
+            if False and metrics is not None:
                 metrics_str = "MSE: %.2f \nSpearman: %.2f \nPearson: %.2f \nSCC: %.2f" % tuple(
                     metrics[i])
                 # bbox={'facecolor': 'white', 'pad': 10})
-                ax[i].text(0, -0.25, metrics_str,
-                           transform=ax[i].transAxes, fontsize=55)
-
+                ax[i].text(0, -0.25, metrics_str, transform=ax[i].transAxes, fontsize=55)
         return fig
 
-    def log_pictures(self, akita_img, vehicle_img, final_img, high_img, high_img_akita, phase, akita_metrics=None, vehicle_metrics=None, final_metrics=None):
 
+    def log_pictures(self, akita_img, vehicle_img, final_img, high_img, high_img_akita, phase, akita_metrics=None, vehicle_metrics=None, final_metrics=None):
         # utils.make_grid(self.get_colors(final_img), nrow=2)
         grid = self._construct_grid(self.get_colors(final_img), final_metrics)
         # self.current_epoch, grid)
-        self.logger.experiment.log_image('{}/final_img'.format(phase), grid)
+        self.logger.experiment['{}/final_img'.format(phase)].log(grid)
 
         akita_img_normalized = (akita_img + 2) / 4
         # utils.make_grid(self.get_colors(akita_img), nrow=2)
         grid = self._construct_grid(self.get_colors(
             akita_img_normalized), akita_metrics)
         # self.current_epoch,  grid)
-        self.logger.experiment.log_image('{}/akita_img'.format(phase), grid)
+        self.logger.experiment['{}/akita_img'.format(phase)].log(grid)
 
         # utils.make_grid(self.get_colors(vehicle_img), nrow=2)
         grid = self._construct_grid(
             self.get_colors(vehicle_img), vehicle_metrics)
         # self.current_epoch, grid)
-        self.logger.experiment.log_image('{}/vehicle_img'.format(phase), grid)
+        self.logger.experiment['{}/vehicle_img'.format(phase)].log(grid)
 
         # utils.make_grid(self.get_colors(high_img), nrow=2)
         grid = self._construct_grid(self.get_colors(high_img))
         # self.current_epoch, grid)
-        self.logger.experiment.log_image('{}/high_img'.format(phase), grid)
+        self.logger.experiment['{}/high_img'.format(phase)].log(grid)
 
         high_img_akita_normalized = (high_img_akita + 2) / 4
         # utils.make_grid(self.get_colors(high_img), nrow=2)
         grid = self._construct_grid(self.get_colors(high_img_akita_normalized))
         # self.current_epoch, grid)
-        self.logger.experiment.log_image(
-            '{}/high_img_akita'.format(phase), grid)
-
+        self.logger.experiment['{}/high_img_akita'.format(phase)].log(grid)
         plt.clf()
+
 
     def calculate_metrics(self, y_pred, y_true):
         scores = get_scores(y_pred, y_true)
         return [scores['mse'], scores['spearman'], scores['pearson'], scores['scc'], ]
+
 
     def get_colors(self, x):
         colorized_x = torch.from_numpy(self.mapper(x.numpy()))
@@ -321,8 +296,8 @@ class HyperModel(pl.LightningModule):
         #colorized_x = colorized_x.permute((0, -1, 1, 2))[:, :-1, :, :]
         return colorized_x
 
-    def from_upper_triu(self, flatten_triu, img_size=188, num_diags=2):
 
+    def from_upper_triu(self, flatten_triu, img_size=188, num_diags=2):
         print("flatten shape: ", flatten_triu.shape)
         z = torch.cat([torch.zeros((img_size, img_size)).unsqueeze(
             0) for _ in range(flatten_triu.shape[0])])  # [batch, img_size, img_size]
@@ -358,17 +333,15 @@ class HyperModel(pl.LightningModule):
 
         # metrics
         scores = self.calculate_metrics(output, high_img_vehicle)
-
         return scores
 
-    def test_epoch_end(self, outputs):
 
+    def test_epoch_end(self, outputs):
         print("mean mse: ", np.mean([score[0] for score in outputs]))
         print("mean spearman: ", np.mean([score[1] for score in outputs]))
         print("mean pearson: ", np.mean([score[2] for score in outputs]))
         print("mean scc: ", np.mean([score[3] for score in outputs]))
         #print("mean mae: ", np.mean([score[4] for score in outputs]))
-
         return outputs
 
 
@@ -378,14 +351,14 @@ if __name__ == "__main__":
 
     train_dataloader, val_dataloader, test_dataloader = get_dataloaders(
         batch_size=1)
+    
+    trainer = pl.Trainer(
+        logger=neptune_logger,
+        max_epochs=30,
+        gpus=1,
+        accumulate_grad_batches=32,
+        
+    )
 
-    trainer = pl.Trainer(logger=neptune_logger,
-                         max_epochs=30,
-                         gpus=1,
-                         accumulate_grad_batches=32
-                         )
-
-    trainer.fit(model, train_dataloader=train_dataloader,
-                val_dataloaders=val_dataloader)
-
+    trainer.fit(model, train_dataloader, val_dataloader)
     torch.save(model.state_dict(), "hypermodel_frozen_vehicle.pth")

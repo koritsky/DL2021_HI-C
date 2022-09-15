@@ -15,14 +15,15 @@ python3 hypermodel.py
 python3 hypermodel_graph.py
 ```
 
-model logs of all our training attempts can be checked at https://app.neptune.ai/koritsky/DL2021-Bio
+model logs of all our training attempts can be checked at https://app.neptune.ai/zybinmikhail/DL2021HI-C
 
+<!---
 logs of hypermodel.py are at  https://app.neptune.ai/koritsky/DL2021-Bio/e/DLBIO-165
-
 logs of hypermodel_graph.py are at https://app.neptune.ai/koritsky/DL2021-Bio/e/DLBIO-178
+-->
 
 ## Model Evaluation on the test set
-Download datasets from https://drive.google.com/drive/folders/1wy0lwgR_zzb2GDVkwRELqITkSY1jt6v8 and put it into the dataset/ directory
+Download datasets from [this google drive folder](https://drive.google.com/drive/folders/1YsfN8bdeC1c_HvXs1KApaNetXumNwV2f?usp=sharing) and put it into the dataset/ directory
 
 
 <!---
